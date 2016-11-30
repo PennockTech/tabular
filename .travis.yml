@@ -1,0 +1,43 @@
+language: go
+
+# Be explicit about not needing sudo, so that Travis will use container-based
+# infrastructure for our jobs, always, fewer heuristics.
+sudo: false
+
+#env:
+#  global:
+#    - secure: ""
+#    # Need: COVERALLS_TOKEN
+
+matrix:
+  allow_failures:
+    - go: tip
+  fast_finish: true
+  include:
+    - go: 1.7.3
+      env: UPLOAD_COVERAGE=true
+    - go: 1.6
+    - go: tip
+
+branches:
+  except:
+    - /^(?:exp|wip)(?:[/_-].*)?$/
+
+install:
+  - go get -t -v -u ./...
+  - test "${UPLOAD_COVERAGE:-false}" != "true" || go get github.com/mattn/goveralls
+
+script:
+  - go vet ./...
+  - go test -v ./...
+  - test "${UPLOAD_COVERAGE:-false}" != "true" || ./CoverTest.sh
+
+# after_script:
+#   - test "${UPLOAD_COVERAGE:-false}" != "true" || goveralls -coverprofile=coverage.out -service=travis-ci -repotoken $COVERALLS_TOKEN
+
+#notifications:
+#  slack:
+#    on_success: always
+#    secure: #...
+
+# vim: set sw=2 et :

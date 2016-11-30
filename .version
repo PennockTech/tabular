@@ -1,0 +1,12 @@
+#!/bin/sh
+dirname="$(dirname "$0")"
+if [ "_$dirname" != "_" ]; then
+	cd "${dirname:?}"
+fi
+branch="$(git symbolic-ref --short HEAD)"
+if [ ".$branch" = ".master" ]; then
+	branch=""
+else
+	branch=",$branch"
+fi
+printf "%s%s\n" "$(git describe --always --dirty --tags)" "$branch"
