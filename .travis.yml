@@ -35,9 +35,10 @@ script:
 # after_script:
 #   - test "${UPLOAD_COVERAGE:-false}" != "true" || goveralls -coverprofile=coverage.out -service=travis-ci -repotoken $COVERALLS_TOKEN
 
-#notifications:
-#  slack:
-#    on_success: always
-#    secure: #...
+notifications:
+  slack:
+    on_success: always
+    rooms:
+      secure: "iM03Rn3Y6xHfoaOUnmk+LQXI1EWKS6pqht/Tz0+MTNVfuWuaZTKTRpKMFLXp0iz/WgDlbF3cF/3eGEdk4DSclKp8QLvtmtHLjHmt1GT7TrEoS46OkL/YC3SbKpas5zPgwoi/DQragMS/7/Z200ppdL5qiO56v7MNMdcCQTuXt+hPdRUWwxlsRf1qlVzcfFyZ1x2OO/GjKlDCSnYaSsU3Rts+zAdg7JWWhh0jVQ790DmDx/OsiIhD4SUPtUTEla854aRqe0I0FT4jF6YLnlsBMuzL2REhmSUjZVMzfEiYeUSYWHixK2mzNqqgD+LHId2pkHFZ7mzcokDn4oaVt4cxocjNn7/zM4DQSym0HmBdoZw/TxtcvlSfH1DZQJBhsS9nVjMscvQdokZ6MEuurUY+U9kfcg2cB2esR1yr8z5Z7QRBJdQMRVnN91we7O+06c0rS7aR9KGMhKqKOi4O4PxzsWZCwoxDBqPz3wvQD3fullt8gElCvljGqJLz6uZylgmJYikGVq5vXT187BIqvVJvHjLWQQMgsVD+MGPPMqy2k3BgDRsG7yTybkM1Dhiuqbc5Ct8p+VrmY5zpINvDDoZ71dOYf/Ptb1d+juPQeVi8oi+nuLfpif6RXooSZr34ja0atm0KyU+3jnWXpI7Vs4YUomF/Y97Vcfw4SxvgsxX17nU="
 
 # vim: set sw=2 et :
