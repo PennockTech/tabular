@@ -10,8 +10,11 @@ A `Table` is an interface.  There is one core public type which implements the
 interface.  This allows the core type to be embedded in the wrapper/display
 objects and for those to satisfy the table interface, thus being tables
 themselves.  Rows and cells are not interfaces.  The core public type for a
-table is, imaginatively, `*ATable`.  Callers are advised to use the `Table`
-interface, if they need to care about a non-inferred type.
+table is, imaginatively, `*ATable`.
+
+Callers doing simple table usage should import the `auto` sub-package and use
+the `RenderTable` interface type, or use tabular's code `Table` interface
+(which is part of `RenderTable`).
 
 A table consists of rows of cells and some metadata.  The metadata includes
 virtual columns, allowing for addressing by column too.  Columns are
@@ -100,6 +103,38 @@ in your wrapper object.  If you want dynamic attributes, updated based upon
 content, _then_ use properties, and consider how to hide this from your users.
 
 
+Auto
+----
+
+This is the `auto` sub-package of `tabular`.
+
+This provides a `RenderTable` interface, which adds `Render()` and
+`RenderTo()` methods to the core `tabular.Table`.
+
+Unlike the more-specific sub-packages, the `New()` and `Wrap()` methods take a
+string argument.  The string is a style.  This string is taken to be a
+dot-joined sequence of sections, where the first section is a sub-package or a
+`texttable/decoration.Decoration`.
+
+So `auto.New("csv")` returns an `auto.RenderTable` which is satisfied by a
+`*csv.CSVTable`.  `auto.New("texttable.utf8-light")` is equivalent to
+`auto.New("utf8-light")` and returns an `auto.RenderTable` which is satisfied
+by a `*texttable.TextTable` with the decoration set to `utf8-light`.
+
+`auto.New("csv.foo")` is currently equivalent to `auto.New("csv")` but future
+extensions might pass the `foo` onto some appropriate initialization of the
+`csv` package.
+
+The `auto` sub-package does not provide specific implementations of the
+`Render` or `RenderTo` sub-packages, but does provide the usual package-level
+wrappers.
+
+In addition, `auto.ListStyles()` returns a sorted list of strings, each of
+which is a valid input for `auto.New(style)`.  The list is not guaranteed to
+be exhaustive, but should cover the common cases.  It is guaranteed to be
+exhaustive of all top-level style names (the bit before the first `.`).
+
+
 Text Table Display
 ------------------
 
@@ -174,3 +209,20 @@ _current_ style, but we should accept PRs for any sane options, and also
 `fieldSeparator` is called out in the struct, and there are no mutators for
 it.  That's not a bug, just "not yet implemented, waiting for solid
 use-cases".
+
+
+Coding Style
+------------
+
+1. All code should pass `go fmt` and `go vet`
+2. `golint` is too opinionated in ways I care about and is explicitly not a
+   fixed goal.  Reducing its complaints for new code is worthwhile, unless
+   that contradicts something here.  Changing an API to match it's style is
+   never acceptable, unless there's an API major revision bump.
+3. Exported constants should be `ALL_CAPS`
+4. Imports should be in batched groups, so that `go fmt` will sort within each
+   group but not move between groups; those groups should be:
+  1. stdlib packages
+  2. testing-related packages, if we're a test
+  3. intra-repo/org packages
+  4. external third-party packages
