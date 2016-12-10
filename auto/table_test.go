@@ -16,6 +16,7 @@ import (
 	"github.com/PennockTech/tabular/auto"
 	"github.com/PennockTech/tabular/csv"
 	"github.com/PennockTech/tabular/html"
+	"github.com/PennockTech/tabular/markdown"
 	"github.com/PennockTech/tabular/texttable"
 )
 
@@ -40,6 +41,9 @@ func TestNewBasic(t *testing.T) {
 	tah := auto.New("html")
 	tdh := html.New()
 
+	tam := auto.New("markdown")
+	tdm := markdown.New()
+
 	tat := auto.New("texttable")
 	tdt := texttable.New()
 
@@ -49,7 +53,7 @@ func TestNewBasic(t *testing.T) {
 	tda.SetDecorationNamed("ascii-simple")
 
 	for _, tb := range []tabular.Table{
-		bare, tac, tdc, tah, tdh, tat, tdt, taa1, taa2, tda,
+		bare, tac, tdc, tah, tdh, tam, tdm, tat, tdt, taa1, taa2, tda,
 	} {
 		populate(T, tb)
 	}
@@ -61,6 +65,7 @@ func TestNewBasic(t *testing.T) {
 	}{
 		{tac, tdc, "csv"},
 		{tah, tdh, "html"},
+		{tam, tdm, "markdown"},
 		{tat, tdt, "texttable"},
 		{taa1, tda, "ascii-simple"},
 		{taa2, tda, "texttable.ascii-simple"},
@@ -111,7 +116,7 @@ func TestListStyles(t *testing.T) {
 		have[h] = struct{}{}
 	}
 
-	for _, expect := range []string{"csv", "html", "ascii-simple", "utf8-light"} {
+	for _, expect := range []string{"csv", "html", "markdown", "ascii-simple", "utf8-light"} {
 		if _, ok := have[expect]; !ok {
 			T.Errorf("ListStyles() missing expected value %q", expect)
 		}

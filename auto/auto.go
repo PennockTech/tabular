@@ -12,6 +12,7 @@ import (
 	"github.com/PennockTech/tabular"
 	"github.com/PennockTech/tabular/csv"
 	"github.com/PennockTech/tabular/html"
+	"github.com/PennockTech/tabular/markdown"
 	"github.com/PennockTech/tabular/texttable"
 	"github.com/PennockTech/tabular/texttable/decoration"
 )
@@ -43,6 +44,8 @@ func Wrap(t tabular.Table, style string) RenderTable {
 	case "html":
 		// TODO: do we want to take `html.caption="foo.bar".class="a b c".whatever ?
 		return html.Wrap(t)
+	case "markdown":
+		return markdown.Wrap(t)
 	case "texttable":
 		tt := texttable.Wrap(t)
 		if len(sections) > 1 {
@@ -68,7 +71,7 @@ func New(style string) RenderTable {
 // without having to go into every possible mutation.
 func ListStyles() []string {
 	l := decoration.RegisteredDecorationNames()
-	l = append(l, "csv", "html")
+	l = append(l, "csv", "html", "markdown")
 	sort.Strings(l)
 	return l
 }
