@@ -4,10 +4,14 @@
 
 /*
 The html wrapper provides a means for generating HTML from a tabular table.
-Like everything else, the interface is still very much in flux.
-Where texttable used properties on the table to control rendering, HTMLTable
-uses a wrapper object which methods can be set upon.
-I want to see which approach is "better".
+
+We mostly avoid specifying inline-CSS, instead making it easy to class/id
+decorate to let you provide your own styling wrappers.
+However, if you specify alignment constraints in the table, those have to
+become styles as the `align` attribute is not allowed in HTML5.
+If you need to specify alignments but also need to block styles in the HTML
+(eg, "Content-Security-Policy" compatibility) then set the .DisableStyle
+in the HTMLTable.
 */
 package html // import "go.pennock.tech/tabular/html"
 
@@ -24,12 +28,15 @@ import (
 // Caption will be inserted if present.
 // TemplateName can be used if you are managing general html/template namespaces,
 // else the template will be unnamed.
+// DisableStyle inhibits inline-CSS for the cases where it might arise
+// (carefully avoided by default, but triggered by alignments).
 type HTMLTable struct {
 	tabular.Table
 	Id           string
 	Class        string
 	Caption      string
 	TemplateName string
+	DisableStyle bool
 
 	rowClassGenerator func(rowNum int, ctx interface{}) template.HTMLAttr
 	rowClassCtx       interface{}
@@ -116,13 +123,35 @@ func cellsToStringArray(cells []tabular.Cell) []string {
 	return r
 }
 
+func tabularAlignToHTMLAlign(po tabular.PropertyOwner) (template.HTMLAttr, bool) {
+	s, ok := tabular.GetStaticAlignment(po)
+	if !ok {
+		return template.HTMLAttr("LEFT"), ok // the string shouldn't be used, but let's all-caps it to stand out just-in-case
+	}
+	switch s {
+	case tabular.ALIGN_LEFT:
+		return template.HTMLAttr("left"), true
+	case tabular.ALIGN_CENTER:
+		return template.HTMLAttr("center"), true
+	case tabular.ALIGN_RIGHT:
+		return template.HTMLAttr("right"), true
+	case tabular.ALIGN_PERIOD:
+		return template.HTMLAttr("."), true
+	case tabular.ALIGN_COMMA:
+		return template.HTMLAttr(","), true
+	}
+	return template.HTMLAttr("LefT"), false
+}
+
 func (ht *HTMLTable) getFuncs() template.FuncMap {
 	return template.FuncMap{
-		"Headers":  func() []string { return cellsToStringArray(ht.Table.Headers()) },
-		"RowClass": func(i int) template.HTMLAttr { return ht.rowClassGenerator(i, ht.rowClassCtx) },
-		"CellsOf":  func(r *tabular.Row) []string { return cellsToStringArray(r.Cells()) },
-		"OnePlus":  func(i int) int { return i + 1 },
-		"Rows":     func() []*tabular.Row { return ht.Table.AllRows() },
+		"Headers":          func() []string { return cellsToStringArray(ht.Table.Headers()) },
+		"RowClass":         func(i int) template.HTMLAttr { return ht.rowClassGenerator(i, ht.rowClassCtx) },
+		"CellsOf":          func(r *tabular.Row) []string { return cellsToStringArray(r.Cells()) },
+		"OnePlus":          func(i int) int { return i + 1 },
+		"Rows":             func() []*tabular.Row { return ht.Table.AllRows() },
+		"ColAlignment":     func(c int) string { attr, _ := tabularAlignToHTMLAlign(ht.columns[c]); return attr },
+		"HaveColAligmnent": func(c int) bool { _, have := tabularAlignToHTMLAlign(ht.columns[c]); return have },
 	}
 }
 

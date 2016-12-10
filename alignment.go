@@ -44,7 +44,14 @@ func (p alignmentPropertyKey) String() string {
 	return "alignment property keyid " + strconv.Itoa(int(p))
 }
 
-func GetAligment(cell *Cell) AlignmentOffset {
+// GetAligmentOffset returns an AlignmentOffset for a given cell, which is a
+// terminal display cell offset from the left.  This is suitable for outputs
+// where we control alignments via spaces etc, but not suitable for use with
+// HTML which has its own capable alignment model.
+//
+// This function iterates through a cell, its row, its column and its table
+// looking for alignment controls.
+func GetAligmentOffset(cell *Cell) AlignmentOffset {
 	var errRecv ErrorReceiver
 	if cell.inRow != nil {
 		errRecv = cell.inRow
@@ -123,4 +130,33 @@ func GetAligment(cell *Cell) AlignmentOffset {
 		}
 	}
 	return AlignmentOffset(0)
+}
+
+// GetStaticAlignment gets the static alignment for one specific property owner.
+// It does not iterate through sources, it does not handle AlignmentFunc.
+// It is suitable for use with rich display alignment controls such as those in HTML.
+func GetStaticAlignment(po PropertyOwner) (StaticAlignment, bool) {
+	sI := src.po.GetProperty(propAlignmentStatic)
+	if sI == nil {
+		return ALIGN_LEFT, false
+	}
+	s, ok := sI.(StaticAlignment)
+	if !ok {
+		return ALIGN_LEFT, false
+	}
+	return s, true
+}
+
+// SetAlignmentStatic can be called with any PropertyOwner (cell, row, etc)
+// to specify an explicit StaticAlignment property to record.
+func SetAlignmentStatic(po PropertyOwner, a StaticAlignment) {
+	po.SetProperty(propAlignmentStatic, s)
+}
+
+// SetAlignmentFunc can be called with any PropertyOwner (cell, row, etc)
+// to specify an AlignmentFunc to record as a property; that function is called
+// upon individual cells.  It is less supported than static alignments, but
+// potentially more powerful.
+func SetAlignmentFunc(po PropertyOwner, f AlignmentFunc) {
+	po.SetProperty(propAlignmentFunc, f)
 }
