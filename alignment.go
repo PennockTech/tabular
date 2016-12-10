@@ -136,7 +136,7 @@ func GetAligmentOffset(cell *Cell) AlignmentOffset {
 // It does not iterate through sources, it does not handle AlignmentFunc.
 // It is suitable for use with rich display alignment controls such as those in HTML.
 func GetStaticAlignment(po PropertyOwner) (StaticAlignment, bool) {
-	sI := src.po.GetProperty(propAlignmentStatic)
+	sI := po.GetProperty(propAlignmentStatic)
 	if sI == nil {
 		return ALIGN_LEFT, false
 	}
@@ -150,7 +150,7 @@ func GetStaticAlignment(po PropertyOwner) (StaticAlignment, bool) {
 // SetAlignmentStatic can be called with any PropertyOwner (cell, row, etc)
 // to specify an explicit StaticAlignment property to record.
 func SetAlignmentStatic(po PropertyOwner, a StaticAlignment) {
-	po.SetProperty(propAlignmentStatic, s)
+	po.SetProperty(propAlignmentStatic, a)
 }
 
 // SetAlignmentFunc can be called with any PropertyOwner (cell, row, etc)

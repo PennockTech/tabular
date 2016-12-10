@@ -135,6 +135,7 @@ func (t *ATable) AddHeaders(items ...interface{}) Table {
 	t.resizeColumnsAtLeast(len(items))
 	hr := NewRowWithCapacity(len(items))
 	hr.ErrorContainer = t.ErrorContainer
+	hr.inTable = t
 	for i := range items {
 		hr.Add(NewCell(items[i]))
 	}

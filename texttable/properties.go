@@ -23,6 +23,12 @@ var (
 	propLinesWidths = &propertyKey{"lineswidths"}
 )
 
+// alignment with "stuff to left" and "stuff to right" requires space for max-to-left and max-to-right
+type alignWidths struct {
+	toLeft  int
+	toRight int
+}
+
 type dimensions struct {
 	cellWidth int
 	height    int
@@ -79,4 +85,18 @@ func CellPropertyExtractLinesWidths(cell *tabular.Cell) []decoration.WidthString
 		return lines
 	}
 	return nil
+}
+
+func CellPropertyAlignWidths(cell *tabular.Cell) alignWidths {
+	dims := CellPropertyExtractDimensions(cell)
+	if dims.cellWidth < 1 {
+		return alignWidths{0, 0}
+	}
+	width := uint(dims.cellWidth)
+	offset := uint(tabular.GetAligmentOffset(cell))
+
+	if offset > width {
+		return alignWidths{int(width), 0}
+	}
+	return alignWidths{int(offset), int(width - offset)}
 }

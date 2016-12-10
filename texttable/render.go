@@ -8,6 +8,7 @@ import (
 	"bytes"
 	"errors"
 	"io"
+	"strings"
 
 	"go.pennock.tech/tabular"
 	"go.pennock.tech/tabular/texttable/decoration"
@@ -47,10 +48,10 @@ func (t *TextTable) RenderTo(w io.Writer) error {
 	columnCount := t.NColumns()
 	headers := t.Headers() // may be nil
 
-	columnWidths := make([]int, columnCount)
+	columnWidthPairs := make([]alignWidths, columnCount)
 	if headers != nil {
-		for i := range columnWidths {
-			columnWidths[i] = CellPropertyExtractDimensions(&headers[i]).cellWidth
+		for i := range columnWidthPairs {
+			columnWidthPairs[i] = CellPropertyAlignWidths(&headers[i])
 		}
 	}
 	for _, row := range t.AllRows() {
@@ -61,13 +62,20 @@ func (t *TextTable) RenderTo(w io.Writer) error {
 			if i > columnCount {
 				break
 			}
-			d := CellPropertyExtractDimensions(&cell)
-			if d.cellWidth > columnWidths[i] {
-				columnWidths[i] = d.cellWidth
+			d := CellPropertyAlignWidths(&cell)
+			if d.toLeft > columnWidthPairs[i].toLeft {
+				columnWidthPairs[i].toLeft = d.toLeft
+			}
+			if d.toRight > columnWidthPairs[i].toRight {
+				columnWidthPairs[i].toRight = d.toRight
 			}
 		}
 	}
 
+	columnWidths := make([]int, columnCount)
+	for i := range columnWidthPairs {
+		columnWidths[i] = columnWidthPairs[i].toLeft + columnWidthPairs[i].toRight
+	}
 	emitter := t.decor.ForColumnWidths(columnWidths)
 	emitter.SetEOL("\n")
 
@@ -75,7 +83,7 @@ func (t *TextTable) RenderTo(w io.Writer) error {
 		if _, err := io.WriteString(w, emitter.LineHeaderTop()); err != nil {
 			return err
 		}
-		for _, lineParts := range t.RowToLinesOfWidthStrings(headers, columnCount) {
+		for _, lineParts := range t.RowToLinesOfWidthStrings(headers, columnCount, columnWidthPairs) {
 			if _, err := io.WriteString(w, emitter.HeaderLineRendered(lineParts)); err != nil {
 				return err
 			}
@@ -96,7 +104,7 @@ func (t *TextTable) RenderTo(w io.Writer) error {
 			}
 			continue
 		}
-		for _, lineParts := range t.RowToLinesOfWidthStrings(row.Cells(), columnCount) {
+		for _, lineParts := range t.RowToLinesOfWidthStrings(row.Cells(), columnCount, columnWidthPairs) {
 			if _, err := io.WriteString(w, emitter.BodyLineRendered(lineParts)); err != nil {
 				return err
 			}
@@ -112,6 +120,7 @@ func (t *TextTable) RenderTo(w io.Writer) error {
 func (t *TextTable) RowToLinesOfWidthStrings(
 	cells []tabular.Cell,
 	columnCount int,
+	columnWidthPairs []alignWidths,
 ) [][]decoration.WidthString {
 	max := len(cells)
 	if columnCount < max {
@@ -134,6 +143,24 @@ func (t *TextTable) RowToLinesOfWidthStrings(
 				lines[l][c] = decoration.WidthString{}
 			} else {
 				lines[l][c] = columns[c][l]
+				if c < len(columnWidthPairs) && c < len(cells) {
+					offsets := CellPropertyAlignWidths(&cells[c])
+					/*
+						If a cell is multi-line (height > 1) then the alignment is forced-left and the offset is always 0.
+						Because we've iterated over every row, we know that for all offset'd cells, the columnWidthPairs
+						is large enough (maxed toLeft and toRight).
+						76543210123  columnWidthPairs[c],
+						    321012   CellPropertyAlignWidths(&cells[c])
+						Bump the width-string length by the difference between max & this toLeft and add that many spaces
+						to left (4 in the above example)
+					*/
+					leftPad := columnWidthPairs[c].toLeft - offsets.toLeft
+					if leftPad <= 0 {
+						continue
+					}
+					lines[l][c].W += leftPad
+					lines[l][c].S = strings.Repeat(" ", leftPad) + lines[l][c].S
+				}
 			}
 		}
 	}
