@@ -180,3 +180,10 @@ func (c Cell) columnOfTable() *column {
 	}
 	return &t.columns[c.columnNum-1]
 }
+
+func (c Cell) tablePtr() *ATable {
+	if c.inRow == nil || c.inRow.inTable == nil {
+		return nil
+	}
+	return c.inRow.inTable
+}
