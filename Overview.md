@@ -211,6 +211,28 @@ it.  That's not a bug, just "not yet implemented, waiting for solid
 use-cases".
 
 
+Markdown Rendering
+------------------
+
+This is the `markdown` sub-package of `tabular`.
+
+The dialect emitted is "GitHub Flavored Markdown" tables.
+
+For automated production you should avoid this renderer in favor of the `html`
+renderer; the markdown table support is extremely limited and there is no
+definition of what should happen for a number of otherwise valid inputs.
+
+The expectation is that documentation maintainers can use this package with
+their client tool to get output which can be inserted in markdown and be
+subject to human review.  If you don't have a human in the loop, then there's
+absolutely no reason to not just use the HTML renderer: Markdown passes
+through HTML, so the HTML output is more portable and safer.
+
+But if your client tooling supports `auto` and can just be asked "hey, give me
+the markdown" then documentation maintainers can use that for grabbing
+samples.
+
+
 Coding Style
 ------------
 
