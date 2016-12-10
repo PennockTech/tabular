@@ -149,6 +149,30 @@ func TestTableRenderingDefault(t *testing.T) {
 	T.Equal(tb.Errors(), nil, "no errors rendering table to file (via pkg function)")
 }
 
+func TestTableRenderingAlign(t *testing.T) {
+	T := testlib.NewT(t)
+	defer T.Finish()
+	tb := createStdTableContents(T)
+
+	tabular.SetAlignmentStatic(tb.Column(1), tabular.ALIGN_RIGHT)
+
+	should := "" +
+		"┏━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━┓\n" +
+		"┃    foo ┃ loquacious ┃ x    ┃\n" +
+		"┣━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━┫\n" +
+		"┃     42 │ .          │ fred ┃\n" +
+		"┃ snerty │ word       │ r    ┃\n" +
+		"┠────────┼────────────┼──────┨\n" +
+		"┃        │ true       │      ┃\n" +
+		"┗━━━━━━━━┷━━━━━━━━━━━━┷━━━━━━┛\n" +
+		""
+
+	rendered, err := tb.Render()
+	T.ExpectSuccess(err, "table rendered, align: col1-right")
+	T.Equal(tb.Errors(), nil, "no errors rendering table (align: col1-right)")
+	T.Equal(rendered, should, "table rendered correctly (align: col1-right)")
+}
+
 func TestTableRenderingLightByConstNamed(t *testing.T) {
 	T := testlib.NewT(t)
 	defer T.Finish()

@@ -107,6 +107,9 @@ func GetAligmentOffset(cell *Cell) AlignmentOffset {
 				}
 				offset := strings.LastIndex(cell.String(), ".")
 				if offset == -1 {
+					// FIXME:
+					// should this be one-past-the-right?
+					// what APIs break when we do that?
 					offset = 0
 				}
 				return AlignmentOffset(offset)
