@@ -155,15 +155,17 @@ func TestTableRenderingAlign(t *testing.T) {
 	tb := createStdTableContents(T)
 
 	tabular.SetAlignmentStatic(tb.Column(1), tabular.ALIGN_RIGHT)
+	tabular.SetAlignmentStatic(tb.Column(2), tabular.ALIGN_CENTER)
+	tabular.SetAlignmentStatic(&tb.Headers()[2], tabular.ALIGN_CENTER)
 
 	should := "" +
 		"┏━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━┓\n" +
 		"┃    foo ┃ loquacious ┃ x    ┃\n" +
 		"┣━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━┫\n" +
-		"┃     42 │ .          │ fred ┃\n" +
-		"┃ snerty │ word       │ r    ┃\n" +
+		"┃     42 │      .     │ fred ┃\n" +
+		"┃ snerty │    word    │ r    ┃\n" +
 		"┠────────┼────────────┼──────┨\n" +
-		"┃        │ true       │      ┃\n" +
+		"┃        │    true    │      ┃\n" +
 		"┗━━━━━━━━┷━━━━━━━━━━━━┷━━━━━━┛\n" +
 		""
 
