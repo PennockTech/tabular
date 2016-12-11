@@ -155,20 +155,27 @@ func TestTableRenderingAlign(t *testing.T) {
 	tb := createStdTableContents(T)
 
 	func() {
-		hdrs := make([]interface{}, tb.NColumns()+1)
+		nCol := tb.NColumns()
+		hdrs := make([]interface{}, nCol+2)
 		for i, c := range tb.Headers() {
 			hdrs[i] = c
 		}
-		hdrs[tb.NColumns()] = "$price"
+		hdrs[nCol] = "$price"
+		hdrs[nCol+1] = "float"
 		tb.AddHeaders(hdrs...)
 
 		prices := []string{"0.24", "100.05", "30.2"}
+		// TODO: could we have a property which affects float conversion spec?
+		// in the meantime, these "floats" are strings; we'll treat them as
+		// European with comma as the decimal separator, to test ALIGN_COMMA
+		floats := []string{"12345678,9", "2,34556789", "4,5"}
 		i := 0
 		for _, r := range tb.AllRows() {
 			if r.IsSeparator() {
 				continue
 			}
 			r.Add(tabular.NewCell(prices[i]))
+			r.Add(tabular.NewCell(floats[i]))
 			i++
 		}
 	}()
@@ -176,17 +183,21 @@ func TestTableRenderingAlign(t *testing.T) {
 	tabular.SetAlignmentStatic(tb.Column(1), tabular.ALIGN_RIGHT)
 	tabular.SetAlignmentStatic(tb.Column(2), tabular.ALIGN_CENTER)
 	tabular.SetAlignmentStatic(tb.Column(4), tabular.ALIGN_PERIOD)
+	tabular.SetAlignmentStatic(tb.Column(5), tabular.ALIGN_COMMA)
 	tabular.SetAlignmentStatic(&tb.Headers()[2], tabular.ALIGN_CENTER)
+	cR, err := tb.CellAt(tabular.CellLocation{Row: 2, Column: 3})
+	T.ExpectSuccess(err, "found the 'r' cell")
+	tabular.SetAlignmentStatic(cR, tabular.ALIGN_RIGHT)
 
 	should := "" +
-		"┏━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━┳━━━━━━━━━━━┓\n" +
-		"┃    foo ┃ loquacious ┃ x    ┃    $price ┃\n" + // FIXME: this x is in the wrong place
-		"┣━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━╇━━━━━━━━━━━┫\n" + // and that $price shows the problem too
-		"┃     42 │      .     │ fred │   0.24    ┃\n" +
-		"┃ snerty │    word    │ r    │ 100.05    ┃\n" +
-		"┠────────┼────────────┼──────┼───────────┨\n" +
-		"┃        │    true    │      │  30.2     ┃\n" +
-		"┗━━━━━━━━┷━━━━━━━━━━━━┷━━━━━━┷━━━━━━━━━━━┛\n" +
+		"┏━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━┳━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┓\n" +
+		"┃    foo ┃ loquacious ┃   x  ┃ $price ┃ float             ┃\n" +
+		"┣━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━╇━━━━━━━━╇━━━━━━━━━━━━━━━━━━━┫\n" +
+		"┃     42 │      .     │ fred │   0.24 │ 12345678,9        ┃\n" +
+		"┃ snerty │    word    │    r │ 100.05 │        2,34556789 ┃\n" +
+		"┠────────┼────────────┼──────┼────────┼───────────────────┨\n" +
+		"┃        │    true    │      │  30.2  │        4,5        ┃\n" +
+		"┗━━━━━━━━┷━━━━━━━━━━━━┷━━━━━━┷━━━━━━━━┷━━━━━━━━━━━━━━━━━━━┛\n" +
 		""
 
 	rendered, err := tb.Render()
