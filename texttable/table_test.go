@@ -154,19 +154,39 @@ func TestTableRenderingAlign(t *testing.T) {
 	defer T.Finish()
 	tb := createStdTableContents(T)
 
+	func() {
+		hdrs := make([]interface{}, tb.NColumns()+1)
+		for i, c := range tb.Headers() {
+			hdrs[i] = c
+		}
+		hdrs[tb.NColumns()] = "$price"
+		tb.AddHeaders(hdrs...)
+
+		prices := []string{"0.24", "100.05", "30.2"}
+		i := 0
+		for _, r := range tb.AllRows() {
+			if r.IsSeparator() {
+				continue
+			}
+			r.Add(tabular.NewCell(prices[i]))
+			i++
+		}
+	}()
+
 	tabular.SetAlignmentStatic(tb.Column(1), tabular.ALIGN_RIGHT)
 	tabular.SetAlignmentStatic(tb.Column(2), tabular.ALIGN_CENTER)
+	tabular.SetAlignmentStatic(tb.Column(4), tabular.ALIGN_PERIOD)
 	tabular.SetAlignmentStatic(&tb.Headers()[2], tabular.ALIGN_CENTER)
 
 	should := "" +
-		"┏━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━┓\n" +
-		"┃    foo ┃ loquacious ┃ x    ┃\n" +
-		"┣━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━┫\n" +
-		"┃     42 │      .     │ fred ┃\n" +
-		"┃ snerty │    word    │ r    ┃\n" +
-		"┠────────┼────────────┼──────┨\n" +
-		"┃        │    true    │      ┃\n" +
-		"┗━━━━━━━━┷━━━━━━━━━━━━┷━━━━━━┛\n" +
+		"┏━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━┳━━━━━━━━━━━┓\n" +
+		"┃    foo ┃ loquacious ┃ x    ┃    $price ┃\n" + // FIXME: this x is in the wrong place
+		"┣━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━╇━━━━━━━━━━━┫\n" + // and that $price shows the problem too
+		"┃     42 │      .     │ fred │   0.24    ┃\n" +
+		"┃ snerty │    word    │ r    │ 100.05    ┃\n" +
+		"┠────────┼────────────┼──────┼───────────┨\n" +
+		"┃        │    true    │      │  30.2     ┃\n" +
+		"┗━━━━━━━━┷━━━━━━━━━━━━┷━━━━━━┷━━━━━━━━━━━┛\n" +
 		""
 
 	rendered, err := tb.Render()
