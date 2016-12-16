@@ -2,7 +2,7 @@
 // All rights reserved, except as granted under license.
 // Licensed per file LICENSE.txt
 
-package tabular
+package tabular // import "go.pennock.tech/tabular"
 
 // We measure from 1:1 so that 0:0 means "not initialized" and if either x or y
 // is zero in a cell, we know the data is invalid.  For some contexts, one or

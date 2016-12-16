@@ -23,7 +23,19 @@ branches:
   except:
     - /^(?:exp|wip)(?:[/_-].*)?$/
 
+# This doesn't fully work; rsync's content into right place, but the trailing .git
+# on the remote repo URL confuses go get, thus the first steps of install
+go_import_path: go.pennock.tech/tabular
+
+# The "correct"ish way is:
+# rem="$(git remote)"; old_remote="$(git remote get-url "$rem")"; git remote set-url "$rem" "${old_remote%.git}"
+# but Travis's git doesn't recognize the `get-url` sub-command.
+# So we use `git config` instead.
+
 install:
+  - git --version
+  - old_remote="$(git config --get remote.origin.url)"; git config remote.origin.url "${old_remote%.git}"
+  - git config --get remote.origin.url
   - go get -t -v -u ./...
   - test "${UPLOAD_COVERAGE:-false}" != "true" || go get github.com/mattn/goveralls
 

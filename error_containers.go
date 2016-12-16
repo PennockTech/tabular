@@ -2,7 +2,7 @@
 // All rights reserved, except as granted under license.
 // Licensed per file LICENSE.txt
 
-package tabular
+package tabular // import "go.pennock.tech/tabular"
 
 // ErrorContainer holds a list of errors.
 // The tabular package uses a batched error model, where errors accumulate

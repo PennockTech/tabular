@@ -2,7 +2,7 @@
 // All rights reserved, except as granted under license.
 // Licensed per file LICENSE.txt
 
-package tabular
+package tabular // import "go.pennock.tech/tabular"
 
 // InvokeRenderCallbacks is used by rendering packages to trigger a table-wide
 // invocation of render-time callbacks.

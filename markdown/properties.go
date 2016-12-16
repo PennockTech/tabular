@@ -2,12 +2,12 @@
 // All rights reserved, except as granted under license.
 // Licensed per file LICENSE.txt
 
-package markdown
+package markdown // import "go.pennock.tech/tabular/markdown"
 
 import (
 	"errors"
 
-	"github.com/PennockTech/tabular"
+	"go.pennock.tech/tabular"
 )
 
 type propertyKey struct {

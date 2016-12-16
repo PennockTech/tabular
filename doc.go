@@ -51,4 +51,4 @@ applied to cells, but some are applied to larger objects.  The registration need
 to know what object is to hold the callback, which target the callback is to be
 applied to, when it should be invoked, and the new callback being registered.
 */
-package tabular
+package tabular // import "go.pennock.tech/tabular"

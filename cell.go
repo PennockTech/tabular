@@ -2,13 +2,13 @@
 // All rights reserved, except as granted under license.
 // Licensed per file LICENSE.txt
 
-package tabular
+package tabular // import "go.pennock.tech/tabular"
 
 import (
 	"fmt"
 	"strings"
 
-	"github.com/PennockTech/tabular/length"
+	"go.pennock.tech/tabular/length"
 )
 
 // A Cell is one item in a table; it holds an object and fields calculated

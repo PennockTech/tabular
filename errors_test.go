@@ -2,7 +2,7 @@
 // All rights reserved, except as granted under license.
 // Licensed per file LICENSE.txt
 
-package tabular_test
+package tabular_test // import "go.pennock.tech/tabular"
 
 import (
 	"strings"
@@ -10,7 +10,7 @@ import (
 
 	"github.com/liquidgecka/testlib"
 
-	"github.com/PennockTech/tabular"
+	"go.pennock.tech/tabular"
 )
 
 func TestErrorNoSuchCell(t *testing.T) {

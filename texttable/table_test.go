@@ -2,7 +2,7 @@
 // All rights reserved, except as granted under license.
 // Licensed per file LICENSE.txt
 
-package texttable_test
+package texttable_test // import "go.pennock.tech/tabular/texttable"
 
 import (
 	"io/ioutil"
@@ -10,12 +10,12 @@ import (
 
 	"github.com/liquidgecka/testlib"
 
-	"github.com/PennockTech/tabular/texttable"
+	"go.pennock.tech/tabular/texttable"
 
 	// for getting the CellLocation type
-	"github.com/PennockTech/tabular"
+	"go.pennock.tech/tabular"
 	// for testing via the named constants & functions
-	"github.com/PennockTech/tabular/texttable/decoration"
+	"go.pennock.tech/tabular/texttable/decoration"
 )
 
 type str struct {

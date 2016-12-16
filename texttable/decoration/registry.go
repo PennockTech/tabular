@@ -2,7 +2,7 @@
 // All rights reserved, except as granted under license.
 // Licensed per file LICENSE.txt
 
-package decoration
+package decoration // import "go.pennock.tech/tabular/texttable/decoration"
 
 import (
 	"sort"

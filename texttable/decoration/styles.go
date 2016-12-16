@@ -2,7 +2,7 @@
 // All rights reserved, except as granted under license.
 // Licensed per file LICENSE.txt
 
-package decoration
+package decoration // import "go.pennock.tech/tabular/texttable/decoration"
 
 // The const-style names provide for language error-checking for those who
 // explicitly import this package.  Both this and just passing a string

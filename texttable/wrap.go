@@ -2,11 +2,11 @@
 // All rights reserved, except as granted under license.
 // Licensed per file LICENSE.txt
 
-package texttable
+package texttable // import "go.pennock.tech/tabular/texttable"
 
 import (
-	"github.com/PennockTech/tabular"
-	"github.com/PennockTech/tabular/texttable/decoration"
+	"go.pennock.tech/tabular"
+	"go.pennock.tech/tabular/texttable/decoration"
 )
 
 // A TextTable wraps a tabular.Table to act as the render control for

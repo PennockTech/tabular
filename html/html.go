@@ -9,14 +9,14 @@ Where texttable used properties on the table to control rendering, HTMLTable
 uses a wrapper object which methods can be set upon.
 I want to see which approach is "better".
 */
-package html
+package html // import "go.pennock.tech/tabular/html"
 
 import (
 	"bytes"
 	"html/template"
 	"io"
 
-	"github.com/PennockTech/tabular"
+	"go.pennock.tech/tabular"
 )
 
 // HTMLTable wraps a tabular Table to provide some extra information used

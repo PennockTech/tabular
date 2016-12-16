@@ -2,14 +2,14 @@
 // All rights reserved, except as granted under license.
 // Licensed per file LICENSE.txt
 
-package texttable
+package texttable // import "go.pennock.tech/tabular/texttable"
 
 import (
 	"errors"
 
-	"github.com/PennockTech/tabular"
-	"github.com/PennockTech/tabular/length"
-	"github.com/PennockTech/tabular/texttable/decoration"
+	"go.pennock.tech/tabular"
+	"go.pennock.tech/tabular/length"
+	"go.pennock.tech/tabular/texttable/decoration"
 )
 
 type propertyKey struct {

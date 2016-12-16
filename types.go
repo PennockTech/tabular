@@ -2,7 +2,7 @@
 // All rights reserved, except as granted under license.
 // Licensed per file LICENSE.txt
 
-package tabular
+package tabular // import "go.pennock.tech/tabular"
 
 // Open questions:
 // * should we use interfaces to handle reflow and default to reflow

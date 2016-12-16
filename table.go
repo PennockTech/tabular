@@ -2,7 +2,7 @@
 // All rights reserved, except as granted under license.
 // Licensed per file LICENSE.txt
 
-package tabular
+package tabular // import "go.pennock.tech/tabular"
 
 // The Table interface is a thin wrapper around the actual *ATable struct, so that
 // methods can all be on the interface and objects which embed an unnamed table

@@ -2,7 +2,7 @@
 // All rights reserved, except as granted under license.
 // Licensed per file LICENSE.txt
 
-package auto_test
+package auto_test // import "go.pennock.tech/tabular/auto"
 
 import (
 	"bytes"
@@ -12,12 +12,12 @@ import (
 
 	"github.com/liquidgecka/testlib"
 
-	"github.com/PennockTech/tabular"
-	"github.com/PennockTech/tabular/auto"
-	"github.com/PennockTech/tabular/csv"
-	"github.com/PennockTech/tabular/html"
-	"github.com/PennockTech/tabular/markdown"
-	"github.com/PennockTech/tabular/texttable"
+	"go.pennock.tech/tabular"
+	"go.pennock.tech/tabular/auto"
+	"go.pennock.tech/tabular/csv"
+	"go.pennock.tech/tabular/html"
+	"go.pennock.tech/tabular/markdown"
+	"go.pennock.tech/tabular/texttable"
 )
 
 func populate(T *testlib.T, tb tabular.Table) {

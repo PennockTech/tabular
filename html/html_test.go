@@ -2,7 +2,7 @@
 // All rights reserved, except as granted under license.
 // Licensed per file LICENSE.txt
 
-package html_test
+package html_test // import "go.pennock.tech/tabular/html"
 
 import (
 	"fmt"
@@ -12,8 +12,8 @@ import (
 
 	"github.com/liquidgecka/testlib"
 
-	"github.com/PennockTech/tabular"
-	"github.com/PennockTech/tabular/html"
+	"go.pennock.tech/tabular"
+	"go.pennock.tech/tabular/html"
 )
 
 func TestHTMLTableRendering(t *testing.T) {

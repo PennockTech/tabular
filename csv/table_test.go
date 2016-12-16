@@ -2,7 +2,7 @@
 // All rights reserved, except as granted under license.
 // Licensed per file LICENSE.txt
 
-package csv_test
+package csv_test // import "go.pennock.tech/tabular/csv"
 
 import (
 	"io/ioutil"
@@ -10,8 +10,8 @@ import (
 
 	"github.com/liquidgecka/testlib"
 
-	"github.com/PennockTech/tabular"
-	"github.com/PennockTech/tabular/csv"
+	"go.pennock.tech/tabular"
+	"go.pennock.tech/tabular/csv"
 )
 
 func testViaCreatorFunc(t *testing.T, creator func() tabular.Table) {

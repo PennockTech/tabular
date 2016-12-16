@@ -2,19 +2,19 @@
 // All rights reserved, except as granted under license.
 // Licensed per file LICENSE.txt
 
-package auto
+package auto // import "go.pennock.tech/tabular/auto"
 
 import (
 	"io"
 	"sort"
 	"strings"
 
-	"github.com/PennockTech/tabular"
-	"github.com/PennockTech/tabular/csv"
-	"github.com/PennockTech/tabular/html"
-	"github.com/PennockTech/tabular/markdown"
-	"github.com/PennockTech/tabular/texttable"
-	"github.com/PennockTech/tabular/texttable/decoration"
+	"go.pennock.tech/tabular"
+	"go.pennock.tech/tabular/csv"
+	"go.pennock.tech/tabular/html"
+	"go.pennock.tech/tabular/markdown"
+	"go.pennock.tech/tabular/texttable"
+	"go.pennock.tech/tabular/texttable/decoration"
 )
 
 // Any table sub-package which can be rendered should meet this

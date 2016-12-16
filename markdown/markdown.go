@@ -24,7 +24,7 @@ our output as it goes into .md documents, and people viewing the rendered
 tables later.  We need to look "decent" for both, but can defer sanitization
 to the human review step.
 */
-package markdown
+package markdown // import "go.pennock.tech/tabular/markdown"
 
 import (
 	"bytes"
@@ -33,8 +33,8 @@ import (
 	"io"
 	"strings"
 
-	"github.com/PennockTech/tabular"
-	"github.com/PennockTech/tabular/length"
+	"go.pennock.tech/tabular"
+	"go.pennock.tech/tabular/length"
 )
 
 // A MarkdownTable wraps a tabular.Table to act as a render control for Markdown output.

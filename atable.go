@@ -2,7 +2,7 @@
 // All rights reserved, except as granted under license.
 // Licensed per file LICENSE.txt
 
-package tabular
+package tabular // import "go.pennock.tech/tabular"
 
 // An ATable is the top-level container for a grid in tabular.
 // You should not be declaring fields to be of type ATable; instead,

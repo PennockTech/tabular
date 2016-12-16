@@ -2,7 +2,7 @@
 // All rights reserved, except as granted under license.
 // Licensed per file LICENSE.txt
 
-package markdown_test
+package markdown_test // import "go.pennock.tech/tabular/markdown"
 
 import (
 	"bytes"
@@ -13,8 +13,8 @@ import (
 
 	"github.com/liquidgecka/testlib"
 
-	"github.com/PennockTech/tabular"
-	"github.com/PennockTech/tabular/markdown"
+	"go.pennock.tech/tabular"
+	"go.pennock.tech/tabular/markdown"
 )
 
 func testViaCreatorFunc(t *testing.T, creator func() tabular.Table) {

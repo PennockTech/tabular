@@ -2,15 +2,15 @@
 // All rights reserved, except as granted under license.
 // Licensed per file LICENSE.txt
 
-package texttable
+package texttable // import "go.pennock.tech/tabular/texttable"
 
 import (
 	"bytes"
 	"errors"
 	"io"
 
-	"github.com/PennockTech/tabular"
-	"github.com/PennockTech/tabular/texttable/decoration"
+	"go.pennock.tech/tabular"
+	"go.pennock.tech/tabular/texttable/decoration"
 )
 
 // Render takes a tabular.Table and creates a default options TextTable object

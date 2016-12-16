@@ -2,14 +2,14 @@
 // All rights reserved, except as granted under license.
 // Licensed per file LICENSE.txt
 
-package length_test
+package length_test // import "go.pennock.tech/tabular/length"
 
 import (
 	"testing"
 
 	"github.com/liquidgecka/testlib"
 
-	"github.com/PennockTech/tabular/length"
+	"go.pennock.tech/tabular/length"
 )
 
 func TestStringLengths(t *testing.T) {

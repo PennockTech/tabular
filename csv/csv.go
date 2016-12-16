@@ -2,14 +2,14 @@
 // All rights reserved, except as granted under license.
 // Licensed per file LICENSE.txt
 
-package csv
+package csv // import "go.pennock.tech/tabular/csv"
 
 import (
 	"bytes"
 	"fmt"
 	"io"
 
-	"github.com/PennockTech/tabular"
+	"go.pennock.tech/tabular"
 )
 
 // A CSVTable wraps a tabular.Table to act as a render control for CSV output.

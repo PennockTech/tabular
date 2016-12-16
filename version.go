@@ -2,7 +2,7 @@
 // All rights reserved, except as granted under license.
 // Licensed per file LICENSE.txt
 
-package tabular
+package tabular // import "go.pennock.tech/tabular"
 
 // We are a library, not a top-level binary, so we can't depend upon any
 // particular top-level linker action specifying versions.  That said, we

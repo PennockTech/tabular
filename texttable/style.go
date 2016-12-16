@@ -2,12 +2,12 @@
 // All rights reserved, except as granted under license.
 // Licensed per file LICENSE.txt
 
-package texttable
+package texttable // import "go.pennock.tech/tabular/texttable"
 
 import (
 	"fmt"
 
-	"github.com/PennockTech/tabular/texttable/decoration"
+	"go.pennock.tech/tabular/texttable/decoration"
 )
 
 // SetDecoration sets a Decoration type for rendering a table.  The caller

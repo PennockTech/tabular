@@ -5,7 +5,7 @@
 # Based upon mmindenhall's solution in <https://github.com/golang/go/issues/6909>
 #
 
-TOP="github.com/PennockTech/tabular"
+TOP="go.pennock.tech/tabular"
 
 progname="$(basename "$0")"
 trace() { printf >&2 "%s: %s\n" "$progname" "$*" ; }
