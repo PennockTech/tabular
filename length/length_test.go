@@ -36,8 +36,7 @@ func TestStringLengths(t *testing.T) {
 		{"a\xE2\x80\x83b", 5, 3, 3}, // \xE2\x80\x83 = 2003 = EM SPACE
 		{"a\xE2\x80\x8bb", 5, 3, 2}, // \xE2\x80\x8B = 200b = ZERO WIDTH SPACE
 		{"a\xE3\x80\x80b", 5, 3, 4}, // \xE3\x80\x80 = 3000 = IDEOGRAPHIC SPACE (2 wide)
-		// Broken FIXME items (presence here is not API guarantee):
-		{"💪", 4, 1, 1 /* want: 2 */}, // %F0%9F%92%AA = FLEXED BICEPS, followed by a space
+		{"💪", 4, 1, 2},              // %F0%9F%92%AA = FLEXED BICEPS, followed by a space
 
 	} {
 		T.Equalf(length.StringBytes(tuple.s), tuple.b, "bytes length test [%d] string %q", i, tuple.s)
@@ -74,8 +73,8 @@ func TestMultiLineStringLengths(t *testing.T) {
 		{"\xCC\x81a\n\n", 2, 3, 2, 1},
 		{"\xCC\x81a\nｂ", 2, 3, 2, 2}, // 2nd line FULLWIDTH LATIN SMALL LETTER B
 		{"💪\nbb", 2, 4, 2, 2},        // 1st line: 4 bytes, 1 rune, currently 1 cell but should be 2
-		{"💪\nb", 2, 4, 1, 1 /* want: 2 */},
-		{"💪\n\n", 2, 4, 1, 1 /* want: 2 */},
+		{"💪\nb", 2, 4, 1, 2},
+		{"💪\n\n", 2, 4, 1, 2},
 		{"💪\nｂ", 2, 4, 1, 2}, // 2nd line is fullwidth, 2 cells (1st line theoretically 2, but currently 1)
 	} {
 		T.Equalf(len(length.Lines(tuple.s)), tuple.l, "lines count test [%d] string %q", i, tuple.s)
