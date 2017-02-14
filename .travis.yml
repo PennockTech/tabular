@@ -14,7 +14,7 @@ matrix:
     - go: tip
   fast_finish: true
   include:
-    - go: 1.7.3
+    - go: 1.7.5
       env: UPLOAD_COVERAGE=true
     - go: 1.6
     - go: tip
@@ -23,8 +23,6 @@ branches:
   except:
     - /^(?:exp|wip)(?:[/_-].*)?$/
 
-# This doesn't fully work; rsync's content into right place, but the trailing .git
-# on the remote repo URL confuses go get, thus the first steps of install
 go_import_path: go.pennock.tech/tabular
 
 # The "correct"ish way is:
@@ -34,7 +32,6 @@ go_import_path: go.pennock.tech/tabular
 
 install:
   - git --version
-  - old_remote="$(git config --get remote.origin.url)"; git config remote.origin.url "${old_remote%.git}"
   - git config --get remote.origin.url
   - go get -t -v -u ./...
   - test "${UPLOAD_COVERAGE:-false}" != "true" || go get github.com/mattn/goveralls
