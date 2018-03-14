@@ -25,3 +25,10 @@ An overview guide to the codebase can be found in
 [The usage documentation is in Godoc format](https://godoc.org/go.pennock.tech/tabular)
 
 This package should be installable in the usual `go get` manner.
+
+---
+
+### Projects using Tabular
+
+* [character](https://github.com/philpennock/character) — Unicode character
+  lookups and manipulations
