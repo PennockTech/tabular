@@ -24,6 +24,8 @@ An overview guide to the codebase can be found in
 
 [The usage documentation is in Godoc format](https://godoc.org/go.pennock.tech/tabular)
 
+See the [examples](examples/) for a gentler introduction.
+
 This package should be installable in the usual `go get` manner.
 
 ---

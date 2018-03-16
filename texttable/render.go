@@ -50,6 +50,9 @@ func (t *TextTable) RenderTo(w io.Writer) error {
 	columnWidths := make([]int, columnCount)
 	if headers != nil {
 		for i := range columnWidths {
+			if i >= len(headers) {
+				break
+			}
 			columnWidths[i] = CellPropertyExtractDimensions(&headers[i]).cellWidth
 		}
 	}
