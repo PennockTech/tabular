@@ -29,6 +29,8 @@ See the [examples](examples/) for a gentler introduction.
 
 This package should be installable in the usual `go get` manner.
 
+This software is under a [MIT-type license](LICENSE.txt).
+
 ---
 
 ### Projects using Tabular
