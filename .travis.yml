@@ -4,19 +4,14 @@ language: go
 # infrastructure for our jobs, always, fewer heuristics.
 sudo: false
 
-#env:
-#  global:
-#    - secure: ""
-#    # Need: COVERALLS_TOKEN
-
 matrix:
   allow_failures:
     - go: tip
   fast_finish: true
   include:
-    - go: 1.7.5
+    - go: 1.10.x
       env: UPLOAD_COVERAGE=true
-    - go: 1.6
+    - go: 1.9.x
     - go: tip
 
 branches:
@@ -35,14 +30,17 @@ install:
   - git config --get remote.origin.url
   - go get -t -v -u ./...
   - test "${UPLOAD_COVERAGE:-false}" != "true" || go get github.com/mattn/goveralls
+  - test "${UPLOAD_COVERAGE:-false}" != "true" || go get github.com/wadey/gocovmerge
 
 script:
   - go vet ./...
   - go test -v ./...
   - test "${UPLOAD_COVERAGE:-false}" != "true" || ./CoverTest.sh
 
-# after_script:
-#   - test "${UPLOAD_COVERAGE:-false}" != "true" || goveralls -coverprofile=coverage.out -service=travis-ci -repotoken $COVERALLS_TOKEN
+# Since I first set up goveralls for other stuff, coveralls.io have added
+# Travis integration such that a token is not needed for a public repo.  Neat.
+after_script:
+  - test "${UPLOAD_COVERAGE:-false}" != "true" || goveralls -coverprofile=coverage.out -service=travis-ci
 
 notifications:
   slack:
