@@ -59,6 +59,9 @@ func (t *ATable) resizeColumnsAtLeast(newCount int) {
 	t.nColumns = newCount
 }
 
+// Column returns a representation of a given column in the table.
+// Column counting starts at 1.  Providing an invalid column count
+// returns nil.
 func (t *ATable) Column(n int) *column {
 	if n < 1 || n > t.nColumns {
 		return nil

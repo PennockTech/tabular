@@ -10,6 +10,7 @@ import (
 	"io"
 
 	"go.pennock.tech/tabular"
+	"go.pennock.tech/tabular/align"
 	"go.pennock.tech/tabular/texttable/decoration"
 )
 
@@ -48,6 +49,8 @@ func (t *TextTable) RenderTo(w io.Writer) error {
 	headers := t.Headers() // may be nil
 
 	columnWidths := make([]int, columnCount)
+	columnAligns := make([]align.Alignment, columnCount)
+
 	if headers != nil {
 		for i := range columnWidths {
 			if i >= len(headers) {
@@ -71,6 +74,16 @@ func (t *TextTable) RenderTo(w io.Writer) error {
 		}
 	}
 
+	for i := range columnAligns {
+		// public API, 1-based counting, I think because I wanted to reserve 0
+		// for "column-based but applies to all columns" concept?
+		c := t.Column(i + 1)
+		a := c.GetProperty(align.PropertyType)
+		if a != nil {
+			columnAligns[i] = a.(align.Alignment)
+		}
+	}
+
 	emitter := t.decor.ForColumnWidths(columnWidths)
 	emitter.SetEOL("\n")
 
@@ -79,7 +92,7 @@ func (t *TextTable) RenderTo(w io.Writer) error {
 			return err
 		}
 		for _, lineParts := range t.RowToLinesOfWidthStrings(headers, columnCount) {
-			if _, err := io.WriteString(w, emitter.HeaderLineRendered(lineParts)); err != nil {
+			if _, err := io.WriteString(w, emitter.HeaderLineRendered(lineParts, columnAligns)); err != nil {
 				return err
 			}
 		}
@@ -100,7 +113,7 @@ func (t *TextTable) RenderTo(w io.Writer) error {
 			continue
 		}
 		for _, lineParts := range t.RowToLinesOfWidthStrings(row.Cells(), columnCount) {
-			if _, err := io.WriteString(w, emitter.BodyLineRendered(lineParts)); err != nil {
+			if _, err := io.WriteString(w, emitter.BodyLineRendered(lineParts, columnAligns)); err != nil {
 				return err
 			}
 		}

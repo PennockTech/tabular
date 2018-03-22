@@ -166,7 +166,7 @@ func (tb *ATable) RegisterPropertyCallback(
 // PropertyOwner is the high-level interface satisfied by anything
 // which holds metadata in the form of properties.
 type PropertyOwner interface {
-	SetProperty(interface{}, interface{})
+	SetProperty(interface{}, interface{}) error
 	GetProperty(interface{}) interface{}
 }
 
@@ -189,9 +189,13 @@ func (pi *propertyImpl) GetProperty(key interface{}) interface{} {
 	return pi.properties.Value(key)
 }
 
-func (pi *propertyImpl) SetProperty(key, value interface{}) {
+func (pi *propertyImpl) SetProperty(key, value interface{}) error {
+	if pi == nil {
+		return ErrMissingPropertyHolder
+	}
 	_, remainder := stripReturnValue(pi.properties, key)
 	pi.properties = withValue(remainder, key, value)
+	return nil
 }
 
 type emptyProperty int
