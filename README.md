@@ -4,9 +4,9 @@ tabular
 [![Continuous Integration](https://secure.travis-ci.org/PennockTech/tabular.svg?branch=master)](http://travis-ci.org/PennockTech/tabular)
 [![Documentation](https://godoc.org/go.pennock.tech/tabular?status.svg)](https://godoc.org/go.pennock.tech/tabular)
 [![Coverage Status](https://coveralls.io/repos/github/PennockTech/tabular/badge.svg)](https://coveralls.io/github/PennockTech/tabular)
-[![Current Tag](https://img.shields.io/github/tag/PennockTech/tabular.svg)](https://img.shields.io/github/tag/PennockTech/tabular.svg)
-[![Issues](https://img.shields.io/github/issues/PennockTech/tabular.svg)](https://img.shields.io/github/issues/PennockTech/tabular.svg)
-[![Repo Size](https://img.shields.io/github/repo-size/PennockTech/tabular.svg)](https://img.shields.io/github/repo-size/PennockTech/tabular.svg)
+[![Current Tag](https://img.shields.io/github/tag/PennockTech/tabular.svg)](https://github.com/PennockTech/tabular/releases)
+[![Issues](https://img.shields.io/github/issues/PennockTech/tabular.svg)](https://github.com/PennockTech/tabular/issues)
+[![Repo Size](https://img.shields.io/github/repo-size/PennockTech/tabular.svg)](https://github.com/PennockTech/tabular)
 
 The `tabular` package provides a Golang library for storing data in a table
 consisting of rows and columns.  Sub-packages provide for rendering such a
