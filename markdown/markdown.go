@@ -1,4 +1,4 @@
-// Copyright © 2016 Pennock Tech, LLC.
+// Copyright © 2016,2018 Pennock Tech, LLC.
 // All rights reserved, except as granted under license.
 // Licensed per file LICENSE.txt
 
@@ -34,6 +34,7 @@ import (
 	"strings"
 
 	"go.pennock.tech/tabular"
+	"go.pennock.tech/tabular/align"
 	"go.pennock.tech/tabular/length"
 )
 
@@ -123,22 +124,40 @@ func (mt *MarkdownTable) RenderTo(w io.Writer) error {
 		}
 	}
 
-	if err = mt.emitRow(w, columnCount, headers, widths); err != nil {
-		return err
-	}
-
 	controlRowCells := make([]tabular.Cell, 0, columnCount)
+	alignments := make([]align.Alignment, columnCount)
 	for i := 0; i < columnCount; i++ {
 		width := widths[i]
 		// spec mandates at least three dashes
 		if width < 3 {
 			width = 3
 		}
-		// TODO: support column alignment
-		content := strings.Repeat("-", width)
+		var al align.Alignment
+		alRaw := mt.Column(i + 1).GetProperty(align.PropertyType)
+		if alRaw != nil {
+			al = alRaw.(align.Alignment)
+			alignments[i] = al
+		}
+		var content string
+		switch al {
+		case nil, align.Left:
+			content = " " + strings.Repeat("-", width) + " "
+		case align.Right:
+			content = " " + strings.Repeat("-", width) + ":"
+		case align.Center:
+			content = ":" + strings.Repeat("-", width) + ":"
+		default:
+			content = " " + strings.Repeat("-", width) + " "
+		}
+
 		controlRowCells = append(controlRowCells, tabular.NewCell(content))
 	}
-	if err = mt.emitRow(w, columnCount, controlRowCells, widths); err != nil {
+
+	if err = mt.emitRow(w, columnCount, headers, widths, alignments, true); err != nil {
+		return err
+	}
+
+	if err = mt.emitRow(w, columnCount, controlRowCells, widths, alignments, false); err != nil {
 		return err
 	}
 
@@ -146,7 +165,7 @@ func (mt *MarkdownTable) RenderTo(w io.Writer) error {
 		if r.IsSeparator() {
 			continue
 		}
-		if err = mt.emitRow(w, columnCount, r.Cells(), widths); err != nil {
+		if err = mt.emitRow(w, columnCount, r.Cells(), widths, alignments, true); err != nil {
 			return err
 		}
 	}
@@ -156,9 +175,14 @@ func (mt *MarkdownTable) RenderTo(w io.Writer) error {
 // emitRow handles just one row, whether from headers or body.
 // It needs to know how many columns should be in the row, so that it can add extras,
 // or error out, as needed.
-// Note that when we add alignment support, we'll need to handle colons inside
-// the column padding space.
-func (mt *MarkdownTable) emitRow(w io.Writer, columnCount int, cells []tabular.Cell, widths []int) error {
+func (mt *MarkdownTable) emitRow(
+	w io.Writer,
+	columnCount int,
+	cells []tabular.Cell,
+	widths []int,
+	alignments []align.Alignment,
+	addPads bool,
+) error {
 	var i int
 	var max int = len(cells)
 	if columnCount < max {
@@ -173,22 +197,31 @@ func (mt *MarkdownTable) emitRow(w io.Writer, columnCount int, cells []tabular.C
 	//
 	// For alignment, note that escaping will completely throw things off.  That's okay.
 	// We don't align right for escaped content.  We're after "close enough to not be jarring".
-	fmt.Fprint(w, "| ")
+	barLeft := "| "
+	barRight := " |"
+	barCenter := " | "
+	if !addPads {
+		barLeft = "|"
+		barRight = "|"
+		barCenter = "|"
+	}
+	io.WriteString(w, barLeft)
 	for i = 0; i < max-1; i++ {
-		if _, err := fmt.Fprint(w, mt.mdPaddedCellEscape(cells, widths, i), " | "); err != nil {
+		if _, err := fmt.Fprint(w, mt.mdPaddedCellEscape(cells, widths, alignments, i), barCenter); err != nil {
 			return err
 		}
 	}
-	if _, err := fmt.Fprint(w, mt.mdPaddedCellEscape(cells, widths, i), " |"); err != nil {
+	if _, err := fmt.Fprint(w, mt.mdPaddedCellEscape(cells, widths, alignments, i), barRight); err != nil {
 		return err
 	}
 	i++
 	for ; i < columnCount; i++ {
-		if _, err := fmt.Fprint(w, " |"); err != nil {
+		// these are the extra columns, always have one whitespace before bar
+		if _, err := io.WriteString(w, " |"); err != nil {
 			return err
 		}
 	}
-	if _, err := fmt.Fprintln(w); err != nil {
+	if _, err := io.WriteString(w, "\n"); err != nil {
 		return err
 	}
 	return nil
@@ -196,15 +229,31 @@ func (mt *MarkdownTable) emitRow(w io.Writer, columnCount int, cells []tabular.C
 
 // mdPaddedCellEscape is a wrapper around mdCellEscape which takes care of padding, widths, etc
 // (and so needs more parameters)
-func (mt *MarkdownTable) mdPaddedCellEscape(cells []tabular.Cell, widths []int, i int) string {
+func (mt *MarkdownTable) mdPaddedCellEscape(
+	cells []tabular.Cell,
+	widths []int,
+	alignments []align.Alignment,
+	i int,
+) string {
 	baseline := mt.mdCellEscape(cells[i].String())
 	wantWidth := widths[i]
 	haveWidth := length.StringCells(baseline)
 	if haveWidth >= wantWidth {
 		return baseline
 	}
-	// TODO: handle alignment
-	return baseline + strings.Repeat(" ", wantWidth-haveWidth)
+	pad := wantWidth - haveWidth
+	switch alignments[i] {
+	case nil, align.Left:
+		return baseline + strings.Repeat(" ", pad)
+	case align.Right:
+		return strings.Repeat(" ", pad) + baseline
+	case align.Center:
+		left := pad / 2
+		right := pad - left
+		return strings.Repeat(" ", left) + baseline + strings.Repeat(" ", right)
+	default:
+		return baseline + strings.Repeat(" ", pad)
+	}
 }
 
 // mdCellEscape handles producing the output for one field, with surrounding

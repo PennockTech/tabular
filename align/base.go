@@ -18,15 +18,14 @@ type Alignment interface {
 	isAlignment() struct{}
 }
 
-type alignLeft struct{}
+type alignSimple struct {
+	which int
+}
 
-func (l alignLeft) isAlignment() struct{} { return struct{}{} }
-
-type alignRight struct{}
-
-func (l alignRight) isAlignment() struct{} { return struct{}{} }
+func (l alignSimple) isAlignment() struct{} { return struct{}{} }
 
 var (
-	Left  = alignLeft{}
-	Right = alignRight{}
+	Left   = alignSimple{1}
+	Right  = alignSimple{2}
+	Center = alignSimple{3}
 )

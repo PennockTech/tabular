@@ -35,6 +35,10 @@ func (ws WidthString) WithinWidthAligned(available int, howAlign align.Alignment
 		return ws.S + strings.Repeat(" ", pad)
 	case align.Right:
 		return strings.Repeat(" ", pad) + ws.S
+	case align.Center:
+		left := pad / 2
+		right := pad - left
+		return strings.Repeat(" ", left) + ws.S + strings.Repeat(" ", right)
 	default:
 		panic("unhandled alignment")
 	}
