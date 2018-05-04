@@ -76,15 +76,15 @@ func (ct *JSONTable) RenderTo(w io.Writer) error {
 	for i := 0; i < columnCount; i++ {
 		s := headers[i].String()
 		if s == "" {
-			return fmt.Errorf("json:RenderTo: column %d has an empty header, unusable as a key", i)
+			return fmt.Errorf("json:RenderTo: column %d has an empty header, unusable as a key", i+1)
 		}
 		if previous, already := seen[s]; already {
-			return fmt.Errorf("json:RenderTo: column %d header matches previous column %d: %q", i, previous, s)
+			return fmt.Errorf("json:RenderTo: column %d header matches previous column %d: %q", i+1, previous, s)
 		}
 		seen[s] = i
 		t, err := json.Marshal(s)
 		if err != nil {
-			return fmt.Errorf("json:RenderTo: column %d header JSON encoding failure: %s", i, err)
+			return fmt.Errorf("json:RenderTo: column %d header JSON encoding failure: %s", i+1, err)
 		}
 		keys[i] = append(t, byte(':'), byte(' '))
 	}
@@ -144,12 +144,22 @@ func (ct *JSONTable) emitRowAsJSONObject(w io.Writer, keys [][]byte, cells []tab
 			return err
 		}
 
-		// FIXME: there's no handling in .Item() for .updateCache calling or making sure that
-		// we have a rendered object, so this only works for things stored as intact items in
-		// their own right.
+		// We call .String, so that updateCache stuff is done (workaround for
+		// no update-cache in .Item), and so that we have a fallback for when
+		// the JSON marshalling returns an empty struct: our callers only have
+		// to set a String() method, but json.Marshal doesn't use that as a
+		// marshalling method.  If we rework our API, then we can suggest that
+		// cell data types have MarshalText() method.
+		fallback := cells[i].String()
 		t, err := json.Marshal(cells[i].Item())
 		if err != nil {
-			return fmt.Errorf("json:RenderTo: column %d header JSON encoding failure: %s", i, err)
+			return fmt.Errorf("json:RenderTo: column %d header JSON encoding failure: %s", i+1, err)
+		}
+		if bytes.Equal(t, []byte("{}")) && fallback != "" {
+			t, err = json.Marshal(fallback)
+			if err != nil {
+				return fmt.Errorf("json:RenderTo: column %d header JSON encoding of text fallback failure: %s", i+1, err)
+			}
 		}
 		if _, err = w.Write(t); err != nil {
 			return err
