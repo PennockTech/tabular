@@ -211,6 +211,22 @@ it.  That's not a bug, just "not yet implemented, waiting for solid
 use-cases".
 
 
+JSON Rendering
+--------------
+
+This is the `json` sub-package of `tabular`.
+
+This emits structured JSON where the table is represented as an array of
+objects, one object per row, and the string representations of the column
+headers become the object keys.  It's an error to not have headers; it's an
+error to have missing, empty or duplicate headers (as rendered to string).
+
+This rendered passes the underlying stored items within the cells to
+`encoding/json` for marshalling, so will handle arbitrary types; this has a
+known current limitation/bug that tabular-computed derived cell values
+probably won't work well.
+
+
 Markdown Rendering
 ------------------
 
@@ -239,8 +255,8 @@ Coding Style
 1. All code should pass `go fmt` and `go vet`
 2. `golint` is too opinionated in ways I care about and is explicitly not a
    fixed goal.  Reducing its complaints for new code is worthwhile, unless
-   that contradicts something here.  Changing an API to match it's style is
-   never acceptable, unless there's an API major revision bump.
+   that contradicts something here.  Changing an API to match golint's style
+   is never acceptable, unless there's an API major revision bump.
 3. Exported constants should be `ALL_CAPS`
 4. Imports should be in batched groups, so that `go fmt` will sort within each
    group but not move between groups; those groups should be:

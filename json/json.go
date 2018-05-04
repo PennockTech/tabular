@@ -1,0 +1,163 @@
+// Copyright © 2018 Pennock Tech, LLC.
+// All rights reserved, except as granted under license.
+// Licensed per file LICENSE.txt
+
+package json // import "go.pennock.tech/tabular/json"
+
+import (
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"io"
+
+	"go.pennock.tech/tabular"
+)
+
+// A JSONTable wraps a tabular.Table to act as a render control for JSON output.
+type JSONTable struct {
+	tabular.Table
+}
+
+// Wrap returns a JSONTable rendering object for the given tabular.Table.
+func Wrap(t tabular.Table) *JSONTable {
+	return &JSONTable{
+		Table: t,
+	}
+}
+
+// New returns a JSONTable with a new Table inside it, access via .Table
+// or just use the interface methods on the JSONTable.
+func New() *JSONTable {
+	return Wrap(tabular.New())
+}
+
+// Render takes a tabular.Table and creates a default options JSONTable object
+// and then calls the Render method upon it.
+func Render(t tabular.Table) (string, error) {
+	return Wrap(t).Render()
+}
+
+// RenderTo takes a tabular.Table and creates a default options JSONTable object
+// and calls the RenderTo method upon it.
+func RenderTo(t tabular.Table, w io.Writer) error {
+	return Wrap(t).RenderTo(w)
+}
+
+// Render takes a tabular Table and returns a string representing the fully
+// rendered table or an error.
+func (ct *JSONTable) Render() (string, error) {
+	b := &bytes.Buffer{}
+	err := ct.RenderTo(b)
+	if err != nil {
+		return "", err
+	}
+	return b.String(), nil
+}
+
+// RenderTo writes the table to the provided writer, stopping if it encounters
+// an error.
+func (ct *JSONTable) RenderTo(w io.Writer) error {
+	ct.InvokeRenderCallbacks()
+	var err error
+	columnCount := ct.NColumns()
+	if columnCount < 1 {
+		return fmt.Errorf("json:RenderTo: can't emit a table with %d columns", columnCount)
+	}
+
+	keys := make([][]byte, columnCount)
+	seen := make(map[string]int, columnCount)
+	headers := ct.Headers()
+	if headers == nil {
+		return fmt.Errorf("json:RenderTo: require headers for JSON rendering to provide keys")
+	}
+	if len(headers) < columnCount {
+		return fmt.Errorf("json:RenderTo: require %d headers for keys, only found %d", columnCount, len(headers))
+	}
+	for i := 0; i < columnCount; i++ {
+		s := headers[i].String()
+		if s == "" {
+			return fmt.Errorf("json:RenderTo: column %d has an empty header, unusable as a key", i)
+		}
+		if previous, already := seen[s]; already {
+			return fmt.Errorf("json:RenderTo: column %d header matches previous column %d: %q", i, previous, s)
+		}
+		seen[s] = i
+		t, err := json.Marshal(s)
+		if err != nil {
+			return fmt.Errorf("json:RenderTo: column %d header JSON encoding failure: %s", i, err)
+		}
+		keys[i] = append(t, byte(':'), byte(' '))
+	}
+
+	if _, err = io.WriteString(w, "[\n"); err != nil {
+		return err
+	}
+	needComma := false
+	for _, r := range ct.AllRows() {
+		if needComma {
+			if _, err = io.WriteString(w, ",\n"); err != nil {
+				return err
+			}
+			needComma = false
+		}
+		if r.IsSeparator() {
+			if _, err = io.WriteString(w, "\n"); err != nil {
+				return err
+			}
+			continue
+		}
+		if err = ct.emitRowAsJSONObject(w, keys, r.Cells()); err != nil {
+			return err
+		}
+		needComma = true
+	}
+	// We assume need newline prefix because no comma+newline from new row,
+	// but if the table is empty, this will result in "[\n\n]\n" which is
+	// slightly ugly.  But valid.  So live with it.
+	if _, err = io.WriteString(w, "\n]\n"); err != nil {
+		return err
+	}
+	return nil
+}
+
+// emitRowAsJSONObject handles just one row, as a JSON object, it does not handle
+// any trailing commas outside the object, separating it from the next.
+func (ct *JSONTable) emitRowAsJSONObject(w io.Writer, keys [][]byte, cells []tabular.Cell) error {
+	var (
+		i, max int
+		err    error
+	)
+	max = len(cells)
+	if len(keys) < max {
+		return fmt.Errorf("structural bug, %d headers but %d cells", len(keys), max)
+	}
+
+	separator := "{"
+
+	for i = 0; i < max; i++ {
+		if _, err = io.WriteString(w, separator); err != nil {
+			return err
+		}
+		separator = ", "
+
+		if _, err = w.Write(keys[i]); err != nil {
+			return err
+		}
+
+		// FIXME: there's no handling in .Item() for .updateCache calling or making sure that
+		// we have a rendered object, so this only works for things stored as intact items in
+		// their own right.
+		t, err := json.Marshal(cells[i].Item())
+		if err != nil {
+			return fmt.Errorf("json:RenderTo: column %d header JSON encoding failure: %s", i, err)
+		}
+		if _, err = w.Write(t); err != nil {
+			return err
+		}
+	}
+
+	if _, err = io.WriteString(w, "}"); err != nil {
+		return err
+	}
+	return nil
+}
