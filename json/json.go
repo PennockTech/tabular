@@ -171,12 +171,22 @@ func (jt *JSONTable) emitRowAsJSONObject(w io.Writer, skipableColumns []bool, ke
 			return err
 		}
 
-		// FIXME: there's no handling in .Item() for .updateCache calling or making sure that
-		// we have a rendered object, so this only works for things stored as intact items in
-		// their own right.
+		// We call .String, so that updateCache stuff is done (workaround for
+		// no update-cache in .Item), and so that we have a fallback for when
+		// the JSON marshalling returns an empty struct: our callers only have
+		// to set a String() method, but json.Marshal doesn't use that as a
+		// marshalling method.  If we rework our API, then we can suggest that
+		// cell data types have MarshalText() method.
+		fallback := cells[i].String()
 		t, err := json.Marshal(cells[i].Item())
 		if err != nil {
-			return fmt.Errorf("json:RenderTo: column %d header JSON encoding failure: %s", i, err)
+			return fmt.Errorf("json:RenderTo: column %d header JSON encoding failure: %s", i+1, err)
+		}
+		if bytes.Equal(t, []byte("{}")) && fallback != "" {
+			t, err = json.Marshal(fallback)
+			if err != nil {
+				return fmt.Errorf("json:RenderTo: column %d header JSON encoding of text fallback failure: %s", i+1, err)
+			}
 		}
 		if _, err = w.Write(t); err != nil {
 			return err

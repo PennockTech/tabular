@@ -43,7 +43,8 @@ real row is always a splice of cells, even if that splice is empty.
 A `Cell` contains "an object".  That object can be a string, something which
 satisfies `Stringer` or `GoStringer`, a rune, or another `Cell`.  Cells can
 contain cells and this is intended to allow for dynamic update, based upon
-evaluation.
+evaluation.  Defining a `MarshalText` method may be advisable and a future API
+bump might choose to prefer `MarshalText` to `Stringer` or `GoStringer`.
 
 If a `Cell` contains an object then various rendering layers may make use of
 other interfaces satisfied by that object to determine how to display it;
@@ -225,9 +226,22 @@ headers become the object keys.  It's an error to not have headers; it's an
 error to have missing, empty or duplicate headers (as rendered to string).
 
 This rendered passes the underlying stored items within the cells to
-`encoding/json` for marshalling, so will handle arbitrary types; this has a
-known current limitation/bug that tabular-computed derived cell values
-probably won't work well.
+`encoding/json` for marshalling, so will handle arbitrary types; because we
+have only required that cell types support `.String() string`, we have a
+fallback of using `String()` if the marshalling returns a sequence of `{}`
+corresponding to an empty struct, ie a struct with no exported fields.
+If you store a struct with exported fields and have previously relied upon
+`String()` being defined, then the output in JSON format will be less than
+ideal unless you also define a `MarshalText()` method.
+
+There is no handling for a `MarshalText()` or `MarshalJSON()` method choosing
+to return `{}`, on the assumption that if they do so, then a `String()` method
+would also choose to return `{}`.  This is currently a brute fallback for a
+heuristic to Do The Right Thing, rather than reflection-aware handling.
+
+A future revision might switch away from generic JSON marshalling and simplify
+this; if we do so, then we'll support the generic `MarshalText()` but *not*
+the `MarshalJSON()` legacy method.
 
 
 Markdown Rendering
