@@ -12,6 +12,7 @@ import (
 
 	"go.pennock.tech/tabular"
 	tab_json "go.pennock.tech/tabular/json"
+	"go.pennock.tech/tabular/properties"
 )
 
 func testViaCreatorFunc(t *testing.T, creator func() tabular.Table) {
@@ -153,4 +154,90 @@ func TestSingleColumnJSON(t *testing.T) {
 	have, err := tb.Render()
 	T.ExpectSuccess(err, "single-column table renders without errors")
 	T.Equal(have, should, "got correct single-column output")
+}
+
+func TestSkipable(t *testing.T) {
+	T := testlib.NewT(t)
+	defer T.Finish()
+
+	tb := tab_json.New()
+	tb.AddHeaders("first", "second")
+	tb.AddRowItems("alpha", "beta")
+	tb.AddRowItems("gamma", "")
+	tb.AddSeparator()
+	tb.AddRowItems("epsilon", nil)
+	tb.AddRowItems("eta")
+	tb.AddRowItems(nil, nil)
+	tb.AddRowItems("lambda", "mu")
+	tb.AddRowItems()
+
+	shouldAll := `[
+{"first": "alpha", "second": "beta"},
+{"first": "gamma", "second": ""},
+
+{"first": "epsilon", "second": null},
+{"first": "eta"},
+{"first": null, "second": null},
+{"first": "lambda", "second": "mu"},
+{}
+]
+`
+	shouldSkipableSecond := `[
+{"first": "alpha", "second": "beta"},
+{"first": "gamma"},
+
+{"first": "epsilon"},
+{"first": "eta"},
+{"first": null},
+{"first": "lambda", "second": "mu"},
+{}
+]
+`
+	shouldSkipableAll := `[
+{"first": "alpha", "second": "beta"},
+{"first": "gamma"},
+
+{"first": "epsilon"},
+{"first": "eta"},
+{},
+{"first": "lambda", "second": "mu"},
+{}
+]
+`
+
+	T.Equal(tb.Errors(), nil, "no errors just adding items")
+	have, err := tb.Render()
+	T.ExpectSuccess(err, "skipable-column table renders without errors pre-skipable")
+	T.Equal(have, shouldAll, "got correct skipable-column output pre-skipable")
+
+	tb.Column(2).SetProperty(properties.Skipable, true)
+	have, err = tb.Render()
+	T.Equal(tb.Errors(), nil, "no errors accumulated by rendering second-skipable") // ensure not leaking errors to wrong place
+	T.ExpectSuccess(err, "skipable-column table renders without errors second-skipable")
+	T.Equal(have, shouldSkipableSecond, "got correct skipable-column output second-skipable")
+
+	tb.Column(2).SetProperty(properties.Skipable, false)
+	have, err = tb.Render()
+	T.Equal(tb.Errors(), nil, "no errors accumulated by rendering second-nonskipable")
+	T.ExpectSuccess(err, "skipable-column table renders without errors second-nonskipable")
+	T.Equal(have, shouldAll, "got correct skipable-column output second-nonskipable")
+
+	tb.Column(0).SetProperty(properties.Skipable, true)
+	tb.Column(2).SetProperty(properties.Skipable, nil)
+	have, err = tb.Render()
+	T.Equal(tb.Errors(), nil, "no errors accumulated by rendering all-nonskipable, second-nil")
+	T.ExpectSuccess(err, "skipable-column table renders without errors all-skipable, second-nil")
+	T.Equal(have, shouldSkipableAll, "got correct skipable-column output all-skipable, second-nil")
+
+	tb.Column(0).SetProperty(properties.Skipable, nil)
+	have, err = tb.Render()
+	T.Equal(tb.Errors(), nil, "no errors accumulated by rendering none-nonskipable")
+	T.ExpectSuccess(err, "skipable-column table renders without errors none-skipable")
+	T.Equal(have, shouldAll, "got correct skipable-column output none-skipable")
+
+	tb.Column(2).SetProperty(properties.Skipable, true)
+	have, err = tb.Render()
+	T.Equal(tb.Errors(), nil, "no errors accumulated by rendering second-skipable, explicit-nil-default")
+	T.ExpectSuccess(err, "skipable-column table renders without errors second-skipable, explicit-nil-default")
+	T.Equal(have, shouldSkipableSecond, "got correct skipable-column output second-skipable, explicit-nil-default")
 }

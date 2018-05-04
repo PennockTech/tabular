@@ -11,8 +11,8 @@ import (
 	"os"
 
 	"go.pennock.tech/tabular"
-	"go.pennock.tech/tabular/align"
 	auto_table "go.pennock.tech/tabular/auto"
+	"go.pennock.tech/tabular/properties/align"
 	"go.pennock.tech/tabular/texttable/decoration"
 )
 
@@ -113,6 +113,29 @@ func Example_alignment() {
 	// │ apples           │       1.31 │
 	// │ strawberries     │       2.22 │
 	// │ pears            │       1.90 │
+	// │ Sekai-ichi apple │      10.50 │
+	// ╰──────────────────┴────────────╯
+}
+
+func Example_alignment2() {
+	t := auto_table.New(decoration.D_UTF8_LIGHT_CURVED)
+	t = populateTable(t)
+	t.AddRowItems("Sekai-ichi apple", "10.50")
+
+	t.Column(0).SetProperty(align.PropertyType, align.Right)
+	t.Column(1).SetProperty(align.PropertyType, align.Center)
+
+	if err := t.RenderTo(os.Stdout); err != nil {
+		fmt.Fprintf(os.Stderr, "table rendering error: %s\n", err)
+	}
+	// Output:
+	// ╭──────────────────┬────────────╮
+	// │      Fruit       │ Price $/lb │
+	// ├──────────────────┼────────────┤
+	// │     bananas      │       0.56 │
+	// │      apples      │       1.31 │
+	// │   strawberries   │       2.22 │
+	// │      pears       │       1.90 │
 	// │ Sekai-ichi apple │      10.50 │
 	// ╰──────────────────┴────────────╯
 }

@@ -2,7 +2,7 @@
 // All rights reserved, except as granted under license.
 // Licensed per file LICENSE.txt
 
-package align // import "go.pennock.tech/tabular/align"
+package align // import "go.pennock.tech/tabular/properties/align"
 
 type propertyKey struct {
 	name string

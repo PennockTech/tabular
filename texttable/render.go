@@ -10,7 +10,7 @@ import (
 	"io"
 
 	"go.pennock.tech/tabular"
-	"go.pennock.tech/tabular/align"
+	"go.pennock.tech/tabular/properties/align"
 	"go.pennock.tech/tabular/texttable/decoration"
 )
 
@@ -74,6 +74,7 @@ func (t *TextTable) RenderTo(w io.Writer) error {
 		}
 	}
 
+	defaultAlignRaw := t.Column(0).GetProperty(align.PropertyType)
 	for i := range columnAligns {
 		// public API, 1-based counting, I think because I wanted to reserve 0
 		// for "column-based but applies to all columns" concept?
@@ -81,6 +82,8 @@ func (t *TextTable) RenderTo(w io.Writer) error {
 		a := c.GetProperty(align.PropertyType)
 		if a != nil {
 			columnAligns[i] = a.(align.Alignment)
+		} else if defaultAlignRaw != nil {
+			columnAligns[i] = defaultAlignRaw.(align.Alignment)
 		}
 	}
 

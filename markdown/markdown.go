@@ -34,8 +34,8 @@ import (
 	"strings"
 
 	"go.pennock.tech/tabular"
-	"go.pennock.tech/tabular/align"
 	"go.pennock.tech/tabular/length"
+	"go.pennock.tech/tabular/properties/align"
 )
 
 // A MarkdownTable wraps a tabular.Table to act as a render control for Markdown output.

@@ -7,7 +7,7 @@ package decoration // import "go.pennock.tech/tabular/texttable/decoration"
 import (
 	"strings"
 
-	"go.pennock.tech/tabular/align"
+	"go.pennock.tech/tabular/properties/align"
 )
 
 // DividerSet provides the characters to use for vertical line-drawing when
