@@ -1,4 +1,4 @@
-// Copyright © 2016 Pennock Tech, LLC.
+// Copyright © 2016,2018 Pennock Tech, LLC.
 // All rights reserved, except as granted under license.
 // Licensed per file LICENSE.txt
 
@@ -12,6 +12,7 @@ import (
 	"go.pennock.tech/tabular"
 	"go.pennock.tech/tabular/csv"
 	"go.pennock.tech/tabular/html"
+	"go.pennock.tech/tabular/json"
 	"go.pennock.tech/tabular/markdown"
 	"go.pennock.tech/tabular/texttable"
 	"go.pennock.tech/tabular/texttable/decoration"
@@ -46,6 +47,8 @@ func Wrap(t tabular.Table, style string) RenderTable {
 		return html.Wrap(t)
 	case "markdown":
 		return markdown.Wrap(t)
+	case "json":
+		return json.Wrap(t)
 	case "texttable":
 		tt := texttable.Wrap(t)
 		if len(sections) > 1 {
@@ -71,7 +74,7 @@ func New(style string) RenderTable {
 // without having to go into every possible mutation.
 func ListStyles() []string {
 	l := decoration.RegisteredDecorationNames()
-	l = append(l, "csv", "html", "markdown")
+	l = append(l, "csv", "html", "json", "markdown")
 	sort.Strings(l)
 	return l
 }
