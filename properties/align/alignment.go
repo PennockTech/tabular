@@ -29,3 +29,9 @@ var (
 	Right  = alignSimple{2}
 	Center = alignSimple{3}
 )
+
+// TestingInvalidAlignment returns an alignment which should not be handled by
+// code and may be used to exercise default handling, such as panics.
+func TestingInvalidAlignment() Alignment {
+	return alignSimple{99999}
+}

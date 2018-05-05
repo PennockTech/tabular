@@ -29,7 +29,16 @@ func Example_inspection() {
 	row := 3
 	column := 2
 	cell, err := t.CellAt(tabular.CellLocation{Row: row, Column: column})
-	fmt.Printf("At row %d column %d the value is %q\n", row, column, cell)
+	loc := cell.Location()
+	fmt.Printf("At row %d column %d the value is %q, self-described as row %d column %d\n",
+		row, column, cell, loc.Row, loc.Column)
+
+	rowKiwi := tabular.NewRowWithCapacity(2)
+	rowKiwi.Add(tabular.NewCell("kiwis"))
+	rowKiwi.Add(tabular.NewCell("2.50"))
+	t.AddRow(rowKiwi)
+	kiwiLocation := rowKiwi.Location()
+	fmt.Printf("Kiwi row is row %d\n", kiwiLocation.Row)
 
 	fmt.Printf("\nManual style at render time:\n")
 	if err = auto_table.RenderTo(t, os.Stdout, "utf8-double"); err != nil {
@@ -43,7 +52,8 @@ func Example_inspection() {
 	// Output:
 	// table rendering error: table has no decoration at all, can't render
 	// Table has 4 rows and 2 columns
-	// At row 3 column 2 the value is "2.22"
+	// At row 3 column 2 the value is "2.22", self-described as row 3 column 2
+	// Kiwi row is row 5
 	//
 	// Manual style at render time:
 	// ╔══════════════╦════════════╗
@@ -53,6 +63,7 @@ func Example_inspection() {
 	// ║ apples       │ 1.31       ║
 	// ║ strawberries │ 2.22       ║
 	// ║ pears        │ 1.90       ║
+	// ║ kiwis        │ 2.50       ║
 	// ╚══════════════╧════════════╝
 }
 
