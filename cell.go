@@ -1,4 +1,4 @@
-// Copyright © 2016 Pennock Tech, LLC.
+// Copyright © 2016,2018 Pennock Tech, LLC.
 // All rights reserved, except as granted under license.
 // Licensed per file LICENSE.txt
 
@@ -174,9 +174,18 @@ func (c Cell) columnOfTable() *column {
 		return nil
 	}
 	t := c.inRow.inTable
-	// CellLocation 1-indexed, t []column 0-indexed
+	// CellLocation 1-indexed, t []column 1-indexed, with [0] being implicit-default
 	if c.columnNum > t.nColumns {
 		return nil
 	}
-	return &t.columns[c.columnNum-1]
+	return &t.columns[c.columnNum]
+}
+
+// Empty returns true if the cell is "empty", whatever that might mean.
+// This includes nothing stored, a cell of nil, or an empty string.
+func (c *Cell) Empty() bool {
+	if c == nil {
+		return true
+	}
+	return c.empty
 }

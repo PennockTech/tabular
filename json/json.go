@@ -11,6 +11,7 @@ import (
 	"io"
 
 	"go.pennock.tech/tabular"
+	"go.pennock.tech/tabular/properties"
 )
 
 // A JSONTable wraps a tabular.Table to act as a render control for JSON output.
@@ -45,9 +46,9 @@ func RenderTo(t tabular.Table, w io.Writer) error {
 
 // Render takes a tabular Table and returns a string representing the fully
 // rendered table or an error.
-func (ct *JSONTable) Render() (string, error) {
+func (jt *JSONTable) Render() (string, error) {
 	b := &bytes.Buffer{}
-	err := ct.RenderTo(b)
+	err := jt.RenderTo(b)
 	if err != nil {
 		return "", err
 	}
@@ -56,17 +57,28 @@ func (ct *JSONTable) Render() (string, error) {
 
 // RenderTo writes the table to the provided writer, stopping if it encounters
 // an error.
-func (ct *JSONTable) RenderTo(w io.Writer) error {
-	ct.InvokeRenderCallbacks()
+func (jt *JSONTable) RenderTo(w io.Writer) error {
+	jt.InvokeRenderCallbacks()
 	var err error
-	columnCount := ct.NColumns()
+	columnCount := jt.NColumns()
 	if columnCount < 1 {
 		return fmt.Errorf("json:RenderTo: can't emit a table with %d columns", columnCount)
 	}
 
+	defaultSkipable := false
+	defSkipableRaw := jt.Column(0).GetProperty(properties.Skipable)
+	if defSkipableRaw != nil {
+		if b, ok := defSkipableRaw.(bool); ok {
+			defaultSkipable = b
+		} else {
+			return fmt.Errorf("json:RenderTo: default column Skipable property is non-boolean (%T)", defSkipableRaw)
+		}
+	}
+
+	skipableColumns := make([]bool, columnCount)
 	keys := make([][]byte, columnCount)
 	seen := make(map[string]int, columnCount)
-	headers := ct.Headers()
+	headers := jt.Headers()
 	if headers == nil {
 		return fmt.Errorf("json:RenderTo: require headers for JSON rendering to provide keys")
 	}
@@ -87,13 +99,25 @@ func (ct *JSONTable) RenderTo(w io.Writer) error {
 			return fmt.Errorf("json:RenderTo: column %d header JSON encoding failure: %s", i+1, err)
 		}
 		keys[i] = append(t, byte(':'), byte(' '))
+
+		c := jt.Column(i + 1)
+		sk := c.GetProperty(properties.Skipable)
+		if sk != nil {
+			if b, ok := sk.(bool); ok {
+				skipableColumns[i] = b
+			} else {
+				return fmt.Errorf("json:RenderTo: column %d Skipable property is non-boolean (%T)", i+1, sk)
+			}
+		} else {
+			skipableColumns[i] = defaultSkipable
+		}
 	}
 
 	if _, err = io.WriteString(w, "[\n"); err != nil {
 		return err
 	}
 	needComma := false
-	for _, r := range ct.AllRows() {
+	for _, r := range jt.AllRows() {
 		if needComma {
 			if _, err = io.WriteString(w, ",\n"); err != nil {
 				return err
@@ -106,7 +130,7 @@ func (ct *JSONTable) RenderTo(w io.Writer) error {
 			}
 			continue
 		}
-		if err = ct.emitRowAsJSONObject(w, keys, r.Cells()); err != nil {
+		if err = jt.emitRowAsJSONObject(w, skipableColumns, keys, r.Cells()); err != nil {
 			return err
 		}
 		needComma = true
@@ -122,7 +146,7 @@ func (ct *JSONTable) RenderTo(w io.Writer) error {
 
 // emitRowAsJSONObject handles just one row, as a JSON object, it does not handle
 // any trailing commas outside the object, separating it from the next.
-func (ct *JSONTable) emitRowAsJSONObject(w io.Writer, keys [][]byte, cells []tabular.Cell) error {
+func (jt *JSONTable) emitRowAsJSONObject(w io.Writer, skipableColumns []bool, keys [][]byte, cells []tabular.Cell) error {
 	var (
 		i, max int
 		err    error
@@ -135,6 +159,9 @@ func (ct *JSONTable) emitRowAsJSONObject(w io.Writer, keys [][]byte, cells []tab
 	separator := "{"
 
 	for i = 0; i < max; i++ {
+		if skipableColumns[i] && cells[i].Empty() {
+			continue
+		}
 		if _, err = io.WriteString(w, separator); err != nil {
 			return err
 		}
@@ -166,6 +193,13 @@ func (ct *JSONTable) emitRowAsJSONObject(w io.Writer, keys [][]byte, cells []tab
 		}
 	}
 
+	if separator == "{" {
+		// never printed the opening brace, all fields skipable
+		if _, err = io.WriteString(w, "{}"); err != nil {
+			return err
+		}
+		return nil
+	}
 	if _, err = io.WriteString(w, "}"); err != nil {
 		return err
 	}

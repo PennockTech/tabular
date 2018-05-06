@@ -1,4 +1,4 @@
-// Copyright © 2016 Pennock Tech, LLC.
+// Copyright © 2016,2018 Pennock Tech, LLC.
 // All rights reserved, except as granted under license.
 // Licensed per file LICENSE.txt
 
@@ -24,7 +24,7 @@ type ATable struct {
 	rows                      []*Row
 	nColumns                  int
 	columnNames               map[string]int
-	columns                   []column
+	columns                   []column    // has nColumns+1 entries
 	tableItselfCallbacks      callbackSet // only useful for render-time
 	tableCellCallbacks        callbackSet
 	tableRowAdditionCallbacks callbackSet
@@ -40,18 +40,22 @@ type column struct {
 
 // New creates a new empty ATable, which satisfies Table.
 func New() *ATable {
-	return &ATable{
+	t := &ATable{
 		ErrorContainer: NewErrorContainer(),
 		rows:           make([]*Row, 0, 50),
-		columns:        make([]column, 0, 10),
+		columns:        make([]column, 1, 10),
 	}
+	t.columns[0].ofTable = t
+	return t
 }
 
 func (t *ATable) resizeColumnsAtLeast(newCount int) {
 	if newCount <= t.nColumns {
 		return
 	}
-	extraColumns := make([]column, newCount-len(t.columns))
+	// include space for column 0 as well
+	// this could be optimized to reduce copying while len<cap
+	extraColumns := make([]column, newCount+1-len(t.columns))
 	for i := range extraColumns {
 		extraColumns[i].ofTable = t
 	}
@@ -59,11 +63,16 @@ func (t *ATable) resizeColumnsAtLeast(newCount int) {
 	t.nColumns = newCount
 }
 
+// Column returns a representation of a given column in the table.
+// Column counting starts at 1.  Providing an invalid column count
+// returns nil.  Column 0 also exists but is the implicit defaults
+// column, letting you set default column properties and then
+// override for other columns.
 func (t *ATable) Column(n int) *column {
-	if n < 1 || n > t.nColumns {
+	if n < 0 || n > t.nColumns {
 		return nil
 	}
-	return &t.columns[n-1]
+	return &t.columns[n]
 }
 
 // NewTableWithHeaders() might allow auto-sizing?

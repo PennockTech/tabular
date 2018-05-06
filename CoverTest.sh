@@ -1,32 +1,16 @@
 #!/bin/sh
-#
-# Relies upon: <https://github.com/wadey/gocovmerge>
-#
-# Based upon mmindenhall's solution in <https://github.com/golang/go/issues/6909>
-#
 
-TOP="go.pennock.tech/tabular"
-
-progname="$(basename "$0")"
+progname="$(basename -s .sh "$0")"
 trace() { printf >&2 "%s: %s\n" "$progname" "$*" ; }
 
+# Remove this block 2018Q3 or thereafter:
 trace "removing old c*.out files"
+# We used to use c.partial.out in each directory, prior to Go 1.10
+# introducing coverprofiles across multiple packages
 find . -name c\*.out -execdir rm -v {} \;
 
-trace "generating new c.partial.out files"
-for D in $(find . -name .git -prune -o -type d -print)
-do
-	if [ $D = "." ]; then
-		go test -covermode=count -coverprofile=c.partial.out -coverpkg ./... .
-		continue
-	fi
-	( cd $D && \
-		go test -covermode=count -coverprofile=c.partial.out -coverpkg "$TOP,./..." .
-	)
-done
-
-trace "combining coverage files -> coverage.out"
-gocovmerge $(find . -name .git -prune -o -name c.partial.out -print) > coverage.out
+trace "generating new coverage.out"
+go test -cover -covermode=count -coverprofile=coverage.out -coverpkg ./... ./...
 
 trace "suggestions:"
 echo "  go tool cover -func=coverage.out | less"

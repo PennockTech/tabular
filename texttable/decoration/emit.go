@@ -1,10 +1,14 @@
-// Copyright © 2016 Pennock Tech, LLC.
+// Copyright © 2016,2018 Pennock Tech, LLC.
 // All rights reserved, except as granted under license.
 // Licensed per file LICENSE.txt
 
 package decoration // import "go.pennock.tech/tabular/texttable/decoration"
 
-import "strings"
+import (
+	"strings"
+
+	"go.pennock.tech/tabular/properties/align"
+)
 
 // DividerSet provides the characters to use for vertical line-drawing when
 // putting content into cells.
@@ -108,13 +112,13 @@ func (e emitter) BodyDividers() DividerSet {
 	}
 }
 
-func (e emitter) commonRenderedLine(ds DividerSet, cellStrs []WidthString) string {
+func (e emitter) commonRenderedLine(ds DividerSet, cellStrs []WidthString, colAligns []align.Alignment) string {
 	fields := make([]string, 0, len(e.colWidths)*2+1)
 	if ds.Left != "" {
 		fields = append(fields, ds.Left)
 	}
 	for i := range e.colWidths {
-		fields = append(fields, cellStrs[i].WithinWidth(e.colWidths[i]))
+		fields = append(fields, cellStrs[i].WithinWidthAligned(e.colWidths[i], colAligns[i]))
 		if ds.Inner != "" {
 			fields = append(fields, ds.Inner)
 		}
@@ -129,10 +133,15 @@ func (e emitter) commonRenderedLine(ds DividerSet, cellStrs []WidthString) strin
 	return strings.Join(fields, " ") + e.eol
 }
 
-func (e emitter) HeaderLineRendered(cellStrs []WidthString) string {
-	return e.commonRenderedLine(e.HeaderDividers(), cellStrs)
+// HeaderLineRendered is internal to tabular, package predates 'internal' else
+// this would be hidden.  It's used to render a single header line of a
+// texttable.
+func (e emitter) HeaderLineRendered(cellStrs []WidthString, colAligns []align.Alignment) string {
+	return e.commonRenderedLine(e.HeaderDividers(), cellStrs, colAligns)
 }
 
-func (e emitter) BodyLineRendered(cellStrs []WidthString) string {
-	return e.commonRenderedLine(e.BodyDividers(), cellStrs)
+// BodyLineRendered is internal to tabular, package predates 'internal' else
+// this would be hidden.  It's used to render a single line of a texttable.
+func (e emitter) BodyLineRendered(cellStrs []WidthString, colAligns []align.Alignment) string {
+	return e.commonRenderedLine(e.BodyDividers(), cellStrs, colAligns)
 }

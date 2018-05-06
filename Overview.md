@@ -18,8 +18,9 @@ the `RenderTable` interface type, or use tabular's code `Table` interface
 
 A table consists of rows of cells and some metadata.  The metadata includes
 virtual columns, allowing for addressing by column too.  Columns are
-identified by the header name.  There is only one (or zero) header row per
-table.
+identified by the header name, or numerically starting at 1, with column 0
+being reserved for use in some contexts to mean "applies to column, is default
+for all columns".  There is only one (or zero) header row per table.
 
 Errors in adding data are usually not reported immediately, to let data stream
 in.  Instead, errors accumulate in an error holder.  Rows hold errors, but
@@ -63,7 +64,9 @@ table or a column, for when a row is added, or when a cell is added.
 The cell's location in the grid is not a property, but is available via a
 method call upon the cell.
 
-The callbacks and properties should not be exposed to end-users.
+The callbacks and properties should not be exposed to end-users.  This should
+be considered a low-level tinkering API and your glue layer should mask the
+details.
 
 All child objects have links back to their containers.  This is used, eg, to
 be able to get column information for a given cell.  This does mean that there
@@ -261,6 +264,32 @@ through HTML, so the HTML output is more portable and safer.
 But if your client tooling supports `auto` and can just be asked "hey, give me
 the markdown" then documentation maintainers can use that for grabbing
 samples.
+
+
+Core Properties
+---------------
+
+Some properties are available within the `properties` sub-package of
+`tabular`.  These properties affect core rendering and are interpreted
+appropriately within tabular itself.
+
+* `go.pennock.tech/tabular/properties`
+  + Skipability:
+    - `Skipable` is the property key, value must be a boolean
+    - non-boolean values may result in panic
+    - currently only a column property, and is permitted to be used by
+      renderers to control whether or not to skip a column entirely,
+      or for the JSON rendered to skip including a field for items in that
+      column if empty.
+      + At present, is only used by JSON, have not yet implemented a
+        multiple-pass system to let it be used for entire-column suppression.
+* `go.pennock.tech/tabular/properties/align`
+  + controls for text alignment; currently this is limited to very simplistic
+    `Left`, `Center` and `Right` values, which may be used as values for the
+    `align.PropertyType` key.  This is expected to change to become more
+    flexible, but this simple use-case will be grandfathered in to remain
+    simple.
+  + This is currently only a column property.
 
 
 Coding Style
