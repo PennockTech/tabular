@@ -1,4 +1,4 @@
-// Copyright © 2016 Pennock Tech, LLC.
+// Copyright © 2016,2018 Pennock Tech, LLC.
 // All rights reserved, except as granted under license.
 // Licensed per file LICENSE.txt
 
@@ -182,6 +182,10 @@ type propertyImpl struct {
 	properties propertySet
 }
 
+// GetProperty returns the property stored for the given key.
+// If no such property has been stored, then nil will be returned.
+// Thus we can't tell the difference between "nil stored" and "nothing stored",
+// thus property storage is free to treat storing "nil" as "remove".
 func (pi *propertyImpl) GetProperty(key interface{}) interface{} {
 	if pi.properties == nil {
 		return nil
@@ -189,12 +193,19 @@ func (pi *propertyImpl) GetProperty(key interface{}) interface{} {
 	return pi.properties.Value(key)
 }
 
+// SetProperty sets the value stored for a given key, removing any other
+// values stored for that key first.
+// If the value is nil then no value will be stored.
 func (pi *propertyImpl) SetProperty(key, value interface{}) error {
 	if pi == nil {
 		return ErrMissingPropertyHolder
 	}
 	_, remainder := stripReturnValue(pi.properties, key)
-	pi.properties = withValue(remainder, key, value)
+	if value == nil {
+		pi.properties = remainder
+	} else {
+		pi.properties = withValue(remainder, key, value)
+	}
 	return nil
 }
 
@@ -227,39 +238,44 @@ func withValue(parent propertySet, key, val interface{}) propertySet {
 // A valueProperty carries a key-value pair. It implements Value for that key and
 // delegates all other calls to the embedded propertySet.
 type valueProperty struct {
-	propertySet
+	chain    propertySet
 	key, val interface{}
 }
 
-func (c *valueProperty) GoString() string {
-	if c.propertySet == nil || c.propertySet == noProperty {
-		return fmt.Sprintf("Value(%#v, %#v)", c.key, c.val)
+func (v *valueProperty) GoString() string {
+	if v.chain == nil || v.chain == noProperty {
+		return fmt.Sprintf("Value(%#v, %#v)", v.key, v.val)
 	}
-	return fmt.Sprintf("%v.withValue(%#v, %#v)", c.propertySet, c.key, c.val)
+	return fmt.Sprintf("%#v.withValue(%#v, %#v)", v.chain, v.key, v.val)
 }
 
-func (c *valueProperty) Value(key interface{}) interface{} {
-	if c.key == key {
-		return c.val
+func (v *valueProperty) Value(key interface{}) interface{} {
+	if v.key == key {
+		return v.val
 	}
-	if c.propertySet == nil || c.propertySet == noProperty {
+	if v.chain == nil || v.chain == noProperty {
 		return nil
 	}
-	return c.propertySet.Value(key)
+	return v.chain.Value(key)
 }
 
+// stripReturnValue takes a property set and a key, and returns the existing
+// value and the propertySet with that value removed.  If multiple identical
+// keys have been added, then this won't remove them all, it's the
+// responsibility of key/value adding code to strip out existing identical keys
+// first.
 func stripReturnValue(ps propertySet, key interface{}) (interface{}, propertySet) {
 	top, ok := ps.(*valueProperty)
 	if !ok {
 		return nil, ps
 	}
-	if top.propertySet == nil || top.propertySet == noProperty {
+	if top.key == key {
+		return top.val, top.chain
+	}
+	if top.chain == nil || top.chain == noProperty {
 		return nil, ps
 	}
-	if top.key == key {
-		return top.val, top.propertySet
-	}
-	return stripChainReturnValue(top, top, top.propertySet, key)
+	return stripChainReturnValue(top, top, top.chain, key)
 }
 
 func stripChainReturnValue(top, parent *valueProperty, this_ propertySet, key interface{}) (interface{}, propertySet) {
@@ -268,14 +284,14 @@ func stripChainReturnValue(top, parent *valueProperty, this_ propertySet, key in
 		// we break the chain if non-valueProperty are intermingled
 		return nil, top
 	}
-	if this.propertySet == nil || this.propertySet == noProperty {
-		return nil, top
-	}
 	if this.key == key {
 		// caller ensures that this != top/parent
-		parent.propertySet = this.propertySet
-		this.propertySet = nil
+		parent.chain = this.chain
+		this.chain = nil
 		return this.val, top
 	}
-	return stripChainReturnValue(top, this, this.propertySet, key)
+	if this.chain == nil || this.chain == noProperty {
+		return nil, top
+	}
+	return stripChainReturnValue(top, this, this.chain, key)
 }
