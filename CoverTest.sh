@@ -1,15 +1,9 @@
 #!/bin/sh
-#
-# Relies upon: <https://github.com/wadey/gocovmerge>
-#
-# Based upon mmindenhall's solution in <https://github.com/golang/go/issues/6909>
-#
 
-TOP="go.pennock.tech/tabular"
-
-progname="$(basename "$0")"
+progname="$(basename -s .sh "$0")"
 trace() { printf >&2 "%s: %s\n" "$progname" "$*" ; }
 
+# Remove this block 2018Q3 or thereafter:
 trace "removing old c*.out files"
 # We used to use c.partial.out in each directory, prior to Go 1.10
 # introducing coverprofiles across multiple packages
