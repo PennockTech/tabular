@@ -34,6 +34,18 @@ This package should be installable in the usual `go get` manner.
 
 This software is under a [MIT-type license](LICENSE.txt).
 
+When embedding into another tool, Go Modules support is able to report on the
+version numbers of all dependencies with `go version -m $cmdname`; to support
+your own version reporting framework, `go.pennock.tech/tabular.Versions()`
+returns a slice of strings (including API versions and the value of the
+`LinkerSpecifiedVersion` top-level variable).
+
+This package uses [semantic versioning](https://semver.org/).  
+Note that Go only supports the most recent two minor versions of the language;
+for the purposes of semver, we do not consider it a breaking change to add a
+dependency upon a language or standard library feature supported by all
+currently-supported releases of Go.
+
 ---
 
 ### Projects using Tabular
