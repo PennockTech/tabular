@@ -31,7 +31,14 @@ func StringRunes(s string) int {
 // The implementation of this function is subject to change as we try to get
 // closer.
 func StringCells(s string) int {
-	return runewidth.StringWidth(s)
+	// FIXME: why do I not have real data here for the common case of one line?
+	// I'm seeing runewidth.StringWidth(s) return 0 bogusly
+	w := runewidth.StringWidth(s)
+	if w == 0 && len(s) > 0 {
+		// Assume it's a wide-char being mis-handled
+		w = 2
+	}
+	return w
 }
 
 // Lines breaks a string apart into lines; a final newline in the string does
