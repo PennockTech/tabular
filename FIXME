@@ -1,0 +1,8 @@
+Modify texttable/decoration/emit.go to be able to suppress arbitrary columns.
+
+Have SkipColumn() method.
+
+Have a pre-pass in texttable/render.go which looks for Skipable properties on columns and determinese if those really are skipable.
+Call SkipColumn on those.
+Ensure that headers don't count.
+Do we have sub-headers or super-headers of N cell width?
