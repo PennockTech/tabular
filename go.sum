@@ -2,3 +2,5 @@ github.com/liquidgecka/testlib v0.0.0-20180123051607-561e6b271c63 h1:E1gsAMD4Tys
 github.com/liquidgecka/testlib v0.0.0-20180123051607-561e6b271c63/go.mod h1:vwMPvLIhXhkJaBfsk/6l+eDuiQaIVHC0b6eCvUVBsB0=
 github.com/mattn/go-runewidth v0.0.4 h1:2BvfKmzob6Bmd4YsL0zygOqfdFnK7GR4QL06Do4/p7Y=
 github.com/mattn/go-runewidth v0.0.4/go.mod h1:LwmH8dsx7+W8Uxz3IHJYH5QSwggIsqBzpuz5H//U1FU=
+github.com/mattn/go-runewidth v0.0.8 h1:3tS41NlGYSmhhe/8fhGRzc+z3AYCw1Fe1WAyLuujKs0=
+github.com/mattn/go-runewidth v0.0.8/go.mod h1:H031xJmbD/WCDINGzjvQ9THkh0rPKHF+m2gUSrubnMI=
