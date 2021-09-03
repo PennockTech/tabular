@@ -1,9 +1,9 @@
 tabular
 =======
 
-[![Continuous Integration](https://secure.travis-ci.org/PennockTech/tabular.svg?branch=main)](http://travis-ci.org/PennockTech/tabular)
+[![Continuous Integration](https://github.com/PennockTech/tabular/actions/workflows/pushes.yaml/badge.svg)](https://github.com/PennockTech/tabular/actions/workflows/pushes.yaml)
 [![Documentation](https://godoc.org/go.pennock.tech/tabular?status.svg)](https://godoc.org/go.pennock.tech/tabular)
-[![Coverage Status](https://coveralls.io/repos/github/PennockTech/tabular/badge.svg)](https://coveralls.io/github/PennockTech/tabular)
+[![Coverage Status](https://coveralls.io/repos/github/PennockTech/tabular/badge.svg?branch=main)](https://coveralls.io/github/PennockTech/tabular?branch=main)
 [![Current Tag](https://img.shields.io/github/tag/PennockTech/tabular.svg)](https://github.com/PennockTech/tabular/releases)
 [![Issues](https://img.shields.io/github/issues/PennockTech/tabular.svg)](https://github.com/PennockTech/tabular/issues)
 [![Repo Size](https://img.shields.io/github/repo-size/PennockTech/tabular.svg)](https://github.com/PennockTech/tabular)
