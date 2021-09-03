@@ -31,6 +31,8 @@ func StringRunes(s string) int {
 // The implementation of this function is subject to change as we try to get
 // closer.
 func StringCells(s string) int {
+	// FIXME: why do I not have real data here for the common case of one line?
+	// If you see a zero length, it's probably an old version of go-runewidth
 	return runewidth.StringWidth(s)
 }
 
