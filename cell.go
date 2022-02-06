@@ -137,7 +137,7 @@ func (c Cell) Lines() []string {
 
 // TerminalCellWidth returns the number of terminal cells which we believe
 // are necessary to render the contents of the object stored in the cell.
-// This is overriden by a TerminalCellWidth method on the object being stored.
+// This is overridden by a TerminalCellWidth method on the object being stored.
 // To a first approximation, this is how many runes are in a cell, but we
 // handle combining characters, wide characters, etc.
 func (c Cell) TerminalCellWidth() int {

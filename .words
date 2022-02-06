@@ -1,0 +1,136 @@
+110
+
+## This project
+tabular
+texttable
+TextTable
+HTMLTable
+
+## Human names
+Pennock
+pennock
+philpennock
+
+## Package-specific conceptual terms used in documentation, hypotheticals etc
+AddContextualErrorList
+ColumnTerminalCellWidth
+ColumnTerminalCellWidthByName
+fieldSplitter
+Glyphs
+InputWriter
+IsUpdatedSince
+NewTableWithHeaders
+RuneCount
+SelectByName
+SetItem
+yourStateId
+
+## Symbols from other packages used in comments but not in code
+io
+
+## Tech abuse of English
+auth/S
+conf
+config/S
+decr
+demultiplex/DGRS
+dir/S
+dup
+incr
+iterable/S
+lookups
+mutator/S
+nocolor
+num/S
+PKI
+pki
+prepend/S
+priv/S
+reflow/DGS
+renderer/AS
+repo/S
+respawn/DGS
+signalled
+unshare/DS
+
+foo
+bar
+baz
+foobar
+frob
+
+## Common terms in (Go) development
+automount/S
+backend/S
+configmap/S
+env/S
+environ/S
+fd_unix
+filesystem/S
+golint
+homedir/S
+hostname/S
+hostnames
+jitter/CGS
+middleware/S
+namespace/DS
+netFD
+param/S
+pidfile/S
+privkey/S
+pubkey/S
+semver
+slowloris
+stdlib
+syscall/S
+userid/S
+uuid/S
+waitgroup/S
+webserver/S
+ztypes_
+
+## Terms I looked up to find the consensus tech spelling
+loggable
+
+## Unix commands and terms
+
+## OSes, Filetypes, etc
+IPv4
+IPv6
+v0
+v1
+v2
+v3
+v4
+v5
+v6
+html
+md
+txt
+xhtml
+www
+
+## Commands, software packages (non-Go)
+
+## Other tools and packages
+
+## Other English dialects
+colour
+humour
+iff
+## Other languages leaking in (eg, Dutch acronyms)
+ipv
+
+## Units and abuse of numbers
+go1
+go2
+c1
+c2
+c3
+c4
+
+## Style guide of "e.g." is too ancient, etc.
+eg
+nb
+pre
+rfcFOO
