@@ -20,9 +20,9 @@ jobs:
     strategy:
       matrix:
         include:
-          - go: '1.17.x'
+          - go: '1.20.x'
             canonical: true
-          - go: '1.16.x'
+          - go: '1.19.x'
             canonical: false
 
     steps:
