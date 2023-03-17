@@ -21,7 +21,6 @@ The table is an error-container.  A row which is not in a table is also an
 error container, but any such errors get moved into the table's collection when
 the row is added, and the row thenceforth uses the table's container.
 
-
 In addition to tables of rows of cells, with virtual columns, we also have
 "properties" and "property callbacks".  People using tables with pre-canned
 rendering should not need to care about these, but people writing renderers

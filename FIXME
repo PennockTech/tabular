@@ -10,3 +10,5 @@ Do we have sub-headers or super-headers of N cell width?
 Should Caption move from being purely HTML into a generic table concept, eg, with overlay on the first line of the table?
 
 Add AddTitle
+
+Have an option to go multi-column, so that if there are more rows than 3/4 of the screen, and the width is less than half the screen, then we switch to dividing into two.

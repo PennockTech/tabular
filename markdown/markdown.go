@@ -258,11 +258,11 @@ func (mt *MarkdownTable) mdPaddedCellEscape(
 
 // mdCellEscape handles producing the output for one field, with surrounding
 // quotes.  Note that there are two separate issues here:
-// 1. Use of the pipe character as a column separator
-// 2. Use of HTML!  Our security model does not trust the content within the
-//    table, so we should escape everything.  If there's a use-case for more
-//    trusted content, that should be a non-default option which we can add
-//    later.
+//  1. Use of the pipe character as a column separator
+//  2. Use of HTML!  Our security model does not trust the content within the
+//     table, so we should escape everything.  If there's a use-case for more
+//     trusted content, that should be a non-default option which we can add
+//     later.
 //
 // What about use of other markdown?  For now, we're going with "anything
 // actively dangerous should require dropping to HTML to accomplish".  If I'm

@@ -91,7 +91,8 @@ func (t *ATable) AddRowItems(items ...interface{}) Table {
 
 // newSeparator returns a separator row.
 // Open Question for v2:
-//   object model might need clean-up, to have interfaces satisfied by rows and separator be a distinct type?
+//
+//	object model might need clean-up, to have interfaces satisfied by rows and separator be a distinct type?
 func newSeparator() *Row { return &Row{isSeparator: true} }
 
 // IsSeparator is true iff a row is a "separator".

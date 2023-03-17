@@ -5,7 +5,7 @@
 package json_test // import "go.pennock.tech/tabular/json"
 
 import (
-	"io/ioutil"
+	"io"
 	"testing"
 
 	"github.com/liquidgecka/testlib"
@@ -130,7 +130,7 @@ func TestFileWritingJSON(t *testing.T) {
 	T.ExpectSuccess(err, "seek-to-start of temp file succeeds")
 	T.Equal(newOff, int64(0), "offset after seeking to start is 0")
 
-	contents, err := ioutil.ReadAll(temp)
+	contents, err := io.ReadAll(temp)
 	T.ExpectSuccess(err, "reading contents from temp file")
 	T.Equal(string(contents), string(should), "content in filesystem is as expected")
 }

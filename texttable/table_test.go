@@ -5,7 +5,7 @@
 package texttable_test // import "go.pennock.tech/tabular/texttable"
 
 import (
-	"io/ioutil"
+	"os"
 	"testing"
 
 	"github.com/liquidgecka/testlib"
@@ -143,7 +143,7 @@ func TestTableRenderingDefault(t *testing.T) {
 	temp := T.TempFile()
 	texttable.RenderTo(rawTb, temp)
 	temp.Close()
-	tempContents, err := ioutil.ReadFile(temp.Name())
+	tempContents, err := os.ReadFile(temp.Name())
 	T.ExpectSuccess(err, "unable to re-open tempfile")
 	T.Equal(tempContents, []byte(should), "simple table wrote to file-system fine (via pkg function)")
 	T.Equal(tb.Errors(), nil, "no errors rendering table to file (via pkg function)")
@@ -200,7 +200,7 @@ func TestTableRenderingLightCurvedByName(t *testing.T) {
 	temp := T.TempFile()
 	tb.RenderTo(temp)
 	temp.Close()
-	tempContents, err := ioutil.ReadFile(temp.Name())
+	tempContents, err := os.ReadFile(temp.Name())
 	T.ExpectSuccess(err, "unable to re-open tempfile")
 	T.Equal(tempContents, []byte(should), "simple table wrote to file-system fine (via method)")
 	T.Equal(tb.Errors(), nil, "no errors rendering table to file (via method)")
