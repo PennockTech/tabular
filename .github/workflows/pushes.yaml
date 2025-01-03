@@ -13,6 +13,7 @@ on:
       - 'wip-*'
       - 'wip_*'
   pull_request:
+  workflow_dispatch:
 
 jobs:
   test:
@@ -20,20 +21,23 @@ jobs:
     strategy:
       matrix:
         include:
-          - go: '1.21.x'
+          - go: 'stable'
             canonical: true
-          - go: '1.20.x'
+          - go: 'oldstable'
             canonical: false
 
     steps:
 
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         # We're not using release process or version stamping which needs Git History in this workflow.
         # Thus we do not need to set with.fetch-depth to 0.  We can live with a shallow clone.
+        with:
+          # security posture improvement:
+          persist-credentials: false
 
       - name: Set up Go
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v5
         with:
           go-version: ${{ matrix.go }}
 
@@ -51,7 +55,7 @@ jobs:
         # These are independent of how the matrix is setup, or if a matrix is even used.
 
       - name: Go caches
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           # (This bit copied from the actions/setup-go@v2 version)
           # In order:
@@ -104,7 +108,7 @@ jobs:
         uses: shogo82148/actions-goveralls@v1
         with:
           path-to-profile: ${{ runner.temp }}/profile.cov
-          flag-name: Go-${{ matrix.go }}
+          flag-name: ${{ steps.go-settings.outputs.go-version }}
           parallel: true
 
 
