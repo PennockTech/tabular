@@ -1,5 +1,5 @@
-github.com/liquidgecka/testlib v0.0.0-20180123051607-561e6b271c63 h1:E1gsAMD4TysLS1Vt2CGR1EK/RtNPIT7YkiVOy9PS1IM=
-github.com/liquidgecka/testlib v0.0.0-20180123051607-561e6b271c63/go.mod h1:vwMPvLIhXhkJaBfsk/6l+eDuiQaIVHC0b6eCvUVBsB0=
+github.com/liquidgecka/testlib v1.0.0 h1:vyJtAXWH21jDpQ488qBU4zmWv9APL+CIoBEzbK5ToRU=
+github.com/liquidgecka/testlib v1.0.0/go.mod h1:vwMPvLIhXhkJaBfsk/6l+eDuiQaIVHC0b6eCvUVBsB0=
 github.com/mattn/go-runewidth v0.0.16 h1:E5ScNMtiwvlvB5paMFdw9p4kSQzbXFikJ5SQO6TULQc=
 github.com/mattn/go-runewidth v0.0.16/go.mod h1:Jdepj2loyihRzMpdS35Xk/zdY8IAYHsh153qUoGf23w=
 github.com/rivo/uniseg v0.2.0/go.mod h1:J6wj4VEh+S6ZtnVlnTBMWIodfgj8LQOQFoIToxlJtxc=
