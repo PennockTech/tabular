@@ -1,4 +1,4 @@
-// Copyright © 2016,2018 Pennock Tech, LLC.
+// Copyright © 2016,2018,2025 Pennock Tech, LLC.
 // All rights reserved, except as granted under license.
 // Licensed per file LICENSE.txt
 
@@ -143,11 +143,15 @@ func (t *ATable) Headers() []Cell {
 func (t *ATable) AddHeaders(items ...interface{}) Table {
 	t.resizeColumnsAtLeast(len(items))
 	hr := NewRowWithCapacity(len(items))
+	columnNames := make(map[string]int, len(items))
 	hr.ErrorContainer = t.ErrorContainer
 	for i := range items {
-		hr.Add(NewCell(items[i]))
+		cell := NewCell(items[i])
+		hr.Add(cell)
+		columnNames[cell.String()] = i
 	}
 	t.headerRow = hr
+	t.columnNames = columnNames
 
 	invokePropertyCallbacks(t.tableRowAdditionCallbacks, CB_AT_ADD, hr, t.ErrorContainer)
 	for i := range hr.cells {

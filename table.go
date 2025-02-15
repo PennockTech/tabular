@@ -1,4 +1,4 @@
-// Copyright © 2016 Pennock Tech, LLC.
+// Copyright © 2016,2025 Pennock Tech, LLC.
 // All rights reserved, except as granted under license.
 // Licensed per file LICENSE.txt
 
@@ -23,6 +23,8 @@ type Table interface {
 	AddRowItems(items ...interface{}) Table
 	CellAt(location CellLocation) (*Cell, error)
 	Column(int) *column
+	SortByNamedColumn(string, SortOrder) error
+	SortByColumnNumber(int, SortOrder) error
 
 	RegisterPropertyCallback(PropertyOwner, callbackTime, cbTarget, PropertyCallback) error
 	InvokeRenderCallbacks()

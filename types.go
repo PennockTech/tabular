@@ -1,4 +1,4 @@
-// Copyright © 2016 Pennock Tech, LLC.
+// Copyright © 2016,2025 Pennock Tech, LLC.
 // All rights reserved, except as granted under license.
 // Licensed per file LICENSE.txt
 
@@ -16,6 +16,11 @@ type Stringer interface {
 // GoStringer to match fmt's.
 type GoStringer interface {
 	GoString() string
+}
+
+// SortInter for cells which define a SortInt64 method for comparison ordering
+type SortInter interface {
+	SortInt64() int64
 }
 
 // Fielder for ability to grab "a row" from a type.

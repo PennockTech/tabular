@@ -1,4 +1,4 @@
-// Copyright © 2016,2018 Pennock Tech, LLC.
+// Copyright © 2016,2018,2025 Pennock Tech, LLC.
 // All rights reserved, except as granted under license.
 // Licensed per file LICENSE.txt
 
@@ -6,6 +6,7 @@ package tabular // import "go.pennock.tech/tabular"
 
 import (
 	"fmt"
+	"reflect"
 	"strings"
 
 	"go.pennock.tech/tabular/length"
@@ -64,6 +65,12 @@ func (c *Cell) Update() {
 		c.height = 0
 		return
 	case Cell:
+		c.str = o.str
+		c.width = o.width
+		c.height = o.height
+		c.empty = o.empty
+		return
+	case *Cell:
 		c.str = o.str
 		c.width = o.width
 		c.height = o.height
@@ -188,4 +195,102 @@ func (c *Cell) Empty() bool {
 		return true
 	}
 	return c.empty
+}
+
+// LessThan returns true if the value of this cell is less than the value of
+// the other cell.  The determination of "less" is euphemistically heuristic.
+func (c *Cell) LessThan(d *Cell) bool {
+	var (
+		g, h, t         *Cell
+		u               Cell
+		ok              bool
+		cv, dv          reflect.Value
+		tt, sortIntType reflect.Type
+		as              string
+		af              float64
+		aOkay           bool
+	)
+
+	g, ok = c, true
+	for ok {
+		if t, ok = g.raw.(*Cell); ok {
+			g = t
+		} else if u, ok = g.raw.(Cell); ok {
+			g = &u
+		}
+	}
+	cv = reflect.ValueOf(g.raw)
+
+	h, ok = d, true
+	for ok {
+		if t, ok = h.raw.(*Cell); ok {
+			h = t
+		} else if u, ok = h.raw.(Cell); ok {
+			h = &u
+		}
+	}
+	dv = reflect.ValueOf(h.raw)
+
+	// Do not try to convert to uint, because positive floats convert and lose precision.
+	// Similarly for int.
+	// Leave _conversions_ for the float.  But "can" is the underlying type.
+	// We want to use SortInter as our _first_ choice, including when defined on types for which the underlying type is an int
+
+	sortIntType = reflect.TypeOf((*SortInter)(nil)).Elem()
+
+	if cv.Type().Implements(sortIntType) {
+		if dv.Type().Implements(sortIntType) {
+			return cv.Interface().(SortInter).SortInt64() < dv.Interface().(SortInter).SortInt64()
+		} else if dv.CanInt() {
+			return cv.Interface().(SortInter).SortInt64() < dv.Int()
+		}
+	} else if dv.Type().Implements(sortIntType) {
+		if cv.CanInt() {
+			return cv.Int() < dv.Interface().(SortInter).SortInt64()
+		}
+	}
+
+	if cv.CanFloat() && dv.CanFloat() {
+		return cv.Float() < dv.Float()
+	}
+	if cv.CanUint() && dv.CanUint() {
+		return cv.Uint() < dv.Uint()
+	}
+	if cv.CanInt() {
+		if dv.CanFloat() {
+			return float64(cv.Int()) < dv.Float()
+		} else if dv.CanInt() {
+			return cv.Int() < dv.Int()
+		}
+	} else if cv.CanFloat() && dv.CanInt() {
+		return cv.Float() < float64(dv.Int())
+	}
+
+	tt = reflect.TypeOf(af)
+	if cv.CanConvert(tt) && dv.CanConvert(tt) {
+		return cv.Convert(tt).Float() < dv.Convert(tt).Float()
+	}
+
+	aOkay = false
+	if x, ok := g.raw.(string); ok {
+		as = x
+		aOkay = true
+	} else if x, ok := g.raw.(Stringer); ok {
+		as = x.String()
+		aOkay = true
+	} else if x, ok := g.raw.(GoStringer); ok {
+		as = x.GoString()
+		aOkay = true
+	}
+	if aOkay {
+		if x, ok := h.raw.(string); ok {
+			return as < x
+		} else if x, ok := h.raw.(Stringer); ok {
+			return as < x.String()
+		} else if x, ok := h.raw.(GoStringer); ok {
+			return as < x.GoString()
+		}
+	}
+
+	return false
 }
