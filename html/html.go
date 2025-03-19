@@ -15,8 +15,10 @@ import (
 	"bytes"
 	"html/template"
 	"io"
+	"strings"
 
 	"go.pennock.tech/tabular"
+	"go.pennock.tech/tabular/color"
 	"go.pennock.tech/tabular/properties"
 )
 
@@ -92,45 +94,113 @@ func (ht *HTMLTable) Render() (string, error) {
 }
 
 const rawTableTemplateStr = `{{/**/ -}}
-<table {{- with .Class}} class="{{.}}"{{end}} {{- with .Id}} id="{{.}}"{{end}}>
+<table {{- with .Class}} class="{{.}}"{{end}} {{- with .Id}} id="{{.}}"{{end}} {{- with (BGColor Table) }} style="background-color: {{.}}"{{end}}>
 {{- with .Caption}}
   <caption>{{.}}</caption>
 {{- end}}
+  <colgroup>
+{{- range $n, $hdr := Headers}}<col class="{{ColumnClass $hdr}}" {{- with (BGColor (Column $n)) }} style="background-color: {{.}}"{{end}} />{{end -}}
+  </colgroup>
   <thead>
     <tr {{- if .HaveRowClass}} class="{{RowClass 0}}"{{end}}>
 {{- range Headers}}<th>{{.}}</th>{{end -}}
-	</tr>
+    </tr>
   </thead>
   <tbody>
 {{- range $i, $row := Rows}}{{if OmitRow $row | not}}{{if $row.IsSeparator | not}}
-    <tr {{- if $.HaveRowClass}} class="{{RowClass (OnePlus $i)}}"{{end}}>
-{{- range CellsOf $row }}<td>{{.}}</td>{{end -}}
+    <tr {{- if $.HaveRowClass}} class="{{RowClass (OnePlus $i)}}"{{end}} {{- with (BGColor .) }} style="background-color: {{.}}"{{end}}>
+{{- range $cell := CellsOf $row }}<td {{- with (BGColor $cell) }} style="background-color: {{.}}"{{end}}>{{$cell}}</td>{{end -}}
     </tr>
 {{- end}}{{end}}{{end}}
   </tbody>
 </table>
 `
 
-func cellsToStringArray(cells []tabular.Cell, omit []bool) []string {
-	r := make([]string, 0, len(cells))
+func cellsNotOmitted(cells []tabular.Cell, omit []bool) []*tabular.Cell {
+	r := make([]*tabular.Cell, 0, len(cells))
 	for i := range cells {
 		if !omit[i] {
-			r = append(r, cells[i].String())
+			r = append(r, &cells[i])
 		}
 	}
 	return r
 }
 
+func cellToColumnClass(cell *tabular.Cell) template.HTMLAttr {
+	s := "col-" + strings.Replace(cell.String(), " ", "-", -1)
+	var b strings.Builder
+	b.Grow(len(s))
+	for _, r := range s {
+		if r > 127 {
+			continue
+		}
+		switch {
+		case 'A' <= r && r <= 'Z':
+		case 'a' <= r && r <= 'z':
+		case '0' <= r && r <= '9':
+		case r == '-', r == '_':
+		case r == ' ' || r == '\t':
+			b.WriteRune('-')
+			continue
+		default:
+			// skip whatever's not allow-listed above
+			continue
+		}
+		b.WriteRune(r)
+	}
+
+	return template.HTMLAttr(b.String())
+}
+
+func lookupColor(item any, prop any) string {
+	var (
+		colRaw any
+		col    color.Color
+		ok     bool
+	)
+	switch container := item.(type) {
+	case HTMLTable:
+		colRaw = container.GetProperty(prop)
+	case tabular.Table:
+		colRaw = container.GetProperty(prop)
+	case *tabular.ATable:
+		colRaw = container.GetProperty(prop)
+	case *tabular.Row:
+		colRaw = container.GetProperty(prop)
+	case tabular.Cell:
+		colRaw = container.GetProperty(prop)
+	case *tabular.Cell:
+		colRaw = container.GetProperty(prop)
+	case *tabular.Column:
+		colRaw = container.GetProperty(prop)
+	default:
+		return ""
+	}
+	if colRaw == nil {
+		return ""
+	}
+	if col, ok = colRaw.(color.Color); ok {
+		return col.HTML()
+	}
+	return ""
+}
+
 func (ht *HTMLTable) getFuncs() template.FuncMap {
 	return template.FuncMap{
-		"Headers":  func() []string { return cellsToStringArray(ht.Table.Headers(), ht.cachedOmitColumns) },
-		"RowClass": func(i int) template.HTMLAttr { return ht.rowClassGenerator(i, ht.rowClassCtx) },
-		"CellsOf":  func(r *tabular.Row) []string { return cellsToStringArray(r.Cells(), ht.cachedOmitColumns) },
-		"OnePlus":  func(i int) int { return i + 1 },
-		"Rows":     func() []*tabular.Row { return ht.Table.AllRows() },
+		"Table":       func() tabular.Table { return ht.Table },
+		"Headers":     func() []*tabular.Cell { return cellsNotOmitted(ht.Table.Headers(), ht.cachedOmitColumns) },
+		"RowClass":    func(i int) template.HTMLAttr { return ht.rowClassGenerator(i, ht.rowClassCtx) },
+		"Column":      func(i int) *tabular.Column { return ht.Table.Column(i + 1) },
+		"ColumnClass": cellToColumnClass,
+		"CellsOf":     func(r *tabular.Row) []*tabular.Cell { return cellsNotOmitted(r.Cells(), ht.cachedOmitColumns) },
+		"OnePlus":     func(i int) int { return i + 1 },
+		"Rows":        func() []*tabular.Row { return ht.Table.AllRows() },
 		"OmitRow": func(r *tabular.Row) (bool, error) {
 			return properties.ExpectBoolPropertyOrNil(properties.Omit, r.GetProperty(properties.Omit), "html:OmitRow", "row", 0)
 		},
+		// want: "FGColor": func[T tabular.Table|*tabular.Cell|*tabular.Row]() string {}
+		"FGColor": func(item any) string { return lookupColor(item, properties.FGColor) },
+		"BGColor": func(item any) string { return lookupColor(item, properties.BGColor) },
 	}
 }
 

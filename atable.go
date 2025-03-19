@@ -24,13 +24,13 @@ type ATable struct {
 	rows                      []*Row
 	nColumns                  int
 	columnNames               map[string]int // internal use, so the int places 0 as first column, not the default properties column
-	columns                   []column       // has nColumns+1 entries
+	columns                   []Column       // has nColumns+1 entries
 	tableItselfCallbacks      callbackSet    // only useful for render-time
 	tableCellCallbacks        callbackSet
 	tableRowAdditionCallbacks callbackSet
 }
 
-type column struct {
+type Column struct {
 	Name                  string
 	ofTable               *ATable
 	cellCallbacks         callbackSet
@@ -43,7 +43,7 @@ func New() *ATable {
 	t := &ATable{
 		ErrorContainer: NewErrorContainer(),
 		rows:           make([]*Row, 0, 50),
-		columns:        make([]column, 1, 10),
+		columns:        make([]Column, 1, 10),
 	}
 	t.columns[0].ofTable = t
 	return t
@@ -55,7 +55,7 @@ func (t *ATable) resizeColumnsAtLeast(newCount int) {
 	}
 	// include space for column 0 as well
 	// this could be optimized to reduce copying while len<cap
-	extraColumns := make([]column, newCount+1-len(t.columns))
+	extraColumns := make([]Column, newCount+1-len(t.columns))
 	for i := range extraColumns {
 		extraColumns[i].ofTable = t
 	}
@@ -68,7 +68,7 @@ func (t *ATable) resizeColumnsAtLeast(newCount int) {
 // returns nil.  Column 0 also exists but is the implicit defaults
 // column, letting you set default column properties and then
 // override for other columns.
-func (t *ATable) Column(n int) *column {
+func (t *ATable) Column(n int) *Column {
 	if n < 0 || n > t.nColumns {
 		return nil
 	}
@@ -77,7 +77,7 @@ func (t *ATable) Column(n int) *column {
 
 // ColumnNamed returns a representation of a given column in the table.
 // The table must have had AddHeaders called.
-func (t *ATable) ColumnNamed(name string) (*column, error) {
+func (t *ATable) ColumnNamed(name string) (*Column, error) {
 	if t.columnNames == nil {
 		return nil, ErrNoColumnHeaders
 	}

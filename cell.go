@@ -173,7 +173,7 @@ func (c Cell) Height() int {
 	return c.height
 }
 
-func (c Cell) columnOfTable() *column {
+func (c Cell) columnOfTable() *Column {
 	if c.columnNum < 1 {
 		return nil
 	}

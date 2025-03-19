@@ -22,8 +22,8 @@ type Table interface {
 	AppendNewRow() *Row
 	AddRowItems(items ...any) Table
 	CellAt(location CellLocation) (*Cell, error)
-	Column(int) *column
-	ColumnNamed(string) (*column, error)
+	Column(int) *Column
+	ColumnNamed(string) (*Column, error)
 	SortByNamedColumn(string, SortOrder) error
 	SortByColumnNumber(int, SortOrder) error
 

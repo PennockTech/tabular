@@ -115,7 +115,7 @@ func (tb *ATable) RegisterPropertyCallback(
 		case CB_ON_ROW:
 			set = &base.tableRowAdditionCallbacks
 		}
-	case *column:
+	case *Column:
 		switch target {
 		case CB_ON_ITSELF:
 			set = &base.columnItselfCallbacks

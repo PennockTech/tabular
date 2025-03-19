@@ -104,6 +104,7 @@ func Example_html() {
 	// │ pears        │ 1.90       │
 	// ╰──────────────┴────────────╯
 	// <table>
+	//   <colgroup><col class="col-Fruit" /><col class="col-Price-lb" /></colgroup>
 	//   <thead>
 	//     <tr><th>Fruit</th><th>Price $/lb</th></tr>
 	//   </thead>

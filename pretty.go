@@ -101,7 +101,7 @@ func (cell *Cell) GoString() string {
 	buf := &bytes.Buffer{}
 	fmt.Fprintf(buf, "C(%q, %d cbs)", cell.String(), debugCallbackSetCount(&cell.callbacks))
 	if cell.propertyImpl.properties != nil {
-		fmt.Fprintf(buf, ".Props{%#v}\n\t", cell.propertyImpl.properties)
+		fmt.Fprintf(buf, ".Props{%#v}", cell.propertyImpl.properties)
 	}
 	return buf.String()
 }

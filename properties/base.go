@@ -17,6 +17,8 @@ func (p *propertyKey) String() string { return "miscellaneous property keyid " +
 var (
 	Skipable = &propertyKey{"skipable"}
 	Omit     = &propertyKey{"omit"}
+	FGColor  = &propertyKey{"fgcolor"}
+	BGColor  = &propertyKey{"bgcolor"}
 )
 
 type ErrPropertyNotBool struct {

@@ -457,6 +457,7 @@ func Example_omit_html() {
 
 	// Output:
 	// <table>
+	//   <colgroup><col class="col-Person" /><col class="col-Age" /><col class="col-Score" /><col class="col-Color" /></colgroup>
 	//   <thead>
 	//     <tr><th>Person</th><th>Age</th><th>Score</th><th>Color</th></tr>
 	//   </thead>
@@ -469,6 +470,7 @@ func Example_omit_html() {
 	// </table>
 	// ---
 	// <table>
+	//   <colgroup><col class="col-Person" /><col class="col-Age" /><col class="col-Color" /></colgroup>
 	//   <thead>
 	//     <tr><th>Person</th><th>Age</th><th>Color</th></tr>
 	//   </thead>
@@ -481,6 +483,7 @@ func Example_omit_html() {
 	// </table>
 	// ---
 	// <table>
+	//   <colgroup><col class="col-Person" /><col class="col-Age" /><col class="col-Color" /></colgroup>
 	//   <thead>
 	//     <tr><th>Person</th><th>Age</th><th>Color</th></tr>
 	//   </thead>
