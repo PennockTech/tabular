@@ -181,19 +181,27 @@ func Example_omit_text() {
 		}
 	}
 
+	fmt.Println("full:")
 	show(t)
+	fmt.Println("no column 3:")
 	t.Column(3).SetProperty(properties.Omit, true)
 	show(t)
+	fmt.Println("with column 3:")
 	t.Column(3).SetProperty(properties.Omit, false) // explicitly false
 	show(t)
+	fmt.Println("column 3 property removed:")
 	t.Column(3).SetProperty(properties.Omit, nil) // nil removes the property
 	show(t)
 
+	fmt.Println("drop last 2 columns:")
 	t.Column(3).SetProperty(properties.Omit, true)
 	t.Column(4).SetProperty(properties.Omit, true)
 	show(t)
+	fmt.Println("also drop second column:")
 	t.Column(2).SetProperty(properties.Omit, true)
 	show(t)
+
+	fmt.Println("expect no table here (no columns left)")
 	t.Column(1).SetProperty(properties.Omit, true)
 	if err := t.RenderTo(os.Stdout); err == nil || err != tabular.ErrNoColumnsToDisplay {
 		if err == nil {
@@ -204,6 +212,7 @@ func Example_omit_text() {
 	}
 
 	// Delete all the properties, then set a default column property and override for the columns we _should_ display
+	fmt.Println("no columns by default, enable two columns by name:")
 	for i := range 4 {
 		t.Column(i).SetProperty(properties.Omit, nil)
 	}
@@ -218,7 +227,22 @@ func Example_omit_text() {
 	}
 	show(t)
 
+	fmt.Println("also drop 3rd row:")
+	var r1, r2 *tabular.Row
+	if c, err := t.CellAt(tabular.CellLocation{Row: 3, Column: 1}); err == nil {
+		r1 = c.Row()
+	} else {
+		fmt.Fprintf(os.Stderr, "table lookup of Row 3 Column 1 failed: %v\n", err)
+	}
+	r2 = t.AllRows()[2]
+	if r1 != r2 {
+		fmt.Fprintf(os.Stderr, "row 3 via CellLocation != row 3 via AllRows\n\tCellLocation: %v\n\tAllRows: %v\n", r1, r2)
+	}
+	r1.SetProperty(properties.Omit, true)
+	show(t)
+
 	// Output:
+	// full:
 	// ╭─────────┬─────┬───────┬────────╮
 	// │ Person  │ Age │ Score │ Color  │
 	// ├─────────┼─────┼───────┼────────┤
@@ -227,6 +251,7 @@ func Example_omit_text() {
 	// │ Bert    │  57 │ 0.7   │ green  │
 	// │ Belinda │  58 │ 0.8   │ blue   │
 	// ╰─────────┴─────┴───────┴────────╯
+	// no column 3:
 	// ╭─────────┬─────┬────────╮
 	// │ Person  │ Age │ Color  │
 	// ├─────────┼─────┼────────┤
@@ -235,6 +260,7 @@ func Example_omit_text() {
 	// │ Bert    │  57 │ green  │
 	// │ Belinda │  58 │ blue   │
 	// ╰─────────┴─────┴────────╯
+	// with column 3:
 	// ╭─────────┬─────┬───────┬────────╮
 	// │ Person  │ Age │ Score │ Color  │
 	// ├─────────┼─────┼───────┼────────┤
@@ -243,6 +269,7 @@ func Example_omit_text() {
 	// │ Bert    │  57 │ 0.7   │ green  │
 	// │ Belinda │  58 │ 0.8   │ blue   │
 	// ╰─────────┴─────┴───────┴────────╯
+	// column 3 property removed:
 	// ╭─────────┬─────┬───────┬────────╮
 	// │ Person  │ Age │ Score │ Color  │
 	// ├─────────┼─────┼───────┼────────┤
@@ -251,6 +278,7 @@ func Example_omit_text() {
 	// │ Bert    │  57 │ 0.7   │ green  │
 	// │ Belinda │  58 │ 0.8   │ blue   │
 	// ╰─────────┴─────┴───────┴────────╯
+	// drop last 2 columns:
 	// ╭─────────┬─────╮
 	// │ Person  │ Age │
 	// ├─────────┼─────┤
@@ -259,6 +287,7 @@ func Example_omit_text() {
 	// │ Bert    │  57 │
 	// │ Belinda │  58 │
 	// ╰─────────┴─────╯
+	// also drop second column:
 	// ╭─────────╮
 	// │ Person  │
 	// ├─────────┤
@@ -267,6 +296,8 @@ func Example_omit_text() {
 	// │ Bert    │
 	// │ Belinda │
 	// ╰─────────╯
+	// expect no table here (no columns left)
+	// no columns by default, enable two columns by name:
 	// ╭─────────┬────────╮
 	// │ Person  │ Color  │
 	// ├─────────┼────────┤
@@ -275,6 +306,15 @@ func Example_omit_text() {
 	// │ Bert    │ green  │
 	// │ Belinda │ blue   │
 	// ╰─────────┴────────╯
+	// also drop 3rd row:
+	// ╭─────────┬────────╮
+	// │ Person  │ Color  │
+	// ├─────────┼────────┤
+	// │ Fred    │ red    │
+	// │ Gladys  │ yellow │
+	// │ Belinda │ blue   │
+	// ╰─────────┴────────╯
+
 }
 
 func Example_omit_json() {
@@ -291,6 +331,9 @@ func Example_omit_json() {
 	t.Column(3).SetProperty(properties.Omit, true)
 	fmt.Println("---")
 	show(t)
+	fmt.Println("---")
+	t.AllRows()[2].SetProperty(properties.Omit, true)
+	show(t)
 
 	// Output:
 	// [
@@ -306,6 +349,13 @@ func Example_omit_json() {
 	// {"Person": "Bert", "Age": 57, "Color": "green"},
 	// {"Person": "Belinda", "Age": 58, "Color": "blue"}
 	// ]
+	// ---
+	// [
+	// {"Person": "Fred", "Age": 34, "Color": "red"},
+	// {"Person": "Gladys", "Age": 32, "Color": "yellow"},
+	// {"Person": "Belinda", "Age": 58, "Color": "blue"}
+	// ]
+
 }
 
 func Example_omit_csv() {
@@ -322,6 +372,9 @@ func Example_omit_csv() {
 	t.Column(3).SetProperty(properties.Omit, true)
 	fmt.Println("---")
 	show(t)
+	fmt.Println("---")
+	t.AllRows()[2].SetProperty(properties.Omit, true)
+	show(t)
 
 	// Output:
 	// "Person","Age","Score","Color"
@@ -335,6 +388,12 @@ func Example_omit_csv() {
 	// "Gladys","32","yellow"
 	// "Bert","57","green"
 	// "Belinda","58","blue"
+	// ---
+	// "Person","Age","Color"
+	// "Fred","34","red"
+	// "Gladys","32","yellow"
+	// "Belinda","58","blue"
+
 }
 
 func Example_omit_markdown() {
@@ -351,6 +410,9 @@ func Example_omit_markdown() {
 	t.Column(3).SetProperty(properties.Omit, true)
 	fmt.Println("---")
 	show(t)
+	fmt.Println("---")
+	t.AllRows()[2].SetProperty(properties.Omit, true)
+	show(t)
 
 	// Output:
 	// | Person  | Age | Score | Color  |
@@ -366,6 +428,13 @@ func Example_omit_markdown() {
 	// | Gladys  |  32 | yellow |
 	// | Bert    |  57 | green  |
 	// | Belinda |  58 | blue   |
+	// ---
+	// | Person  | Age | Color  |
+	// | ------- | ---:| ------ |
+	// | Fred    |  34 | red    |
+	// | Gladys  |  32 | yellow |
+	// | Belinda |  58 | blue   |
+
 }
 
 func Example_omit_html() {
@@ -381,6 +450,9 @@ func Example_omit_html() {
 	show(t)
 	t.Column(3).SetProperty(properties.Omit, true)
 	fmt.Println("---")
+	show(t)
+	fmt.Println("---")
+	t.AllRows()[2].SetProperty(properties.Omit, true)
 	show(t)
 
 	// Output:
@@ -404,6 +476,17 @@ func Example_omit_html() {
 	//     <tr><td>Fred</td><td>34</td><td>red</td></tr>
 	//     <tr><td>Gladys</td><td>32</td><td>yellow</td></tr>
 	//     <tr><td>Bert</td><td>57</td><td>green</td></tr>
+	//     <tr><td>Belinda</td><td>58</td><td>blue</td></tr>
+	//   </tbody>
+	// </table>
+	// ---
+	// <table>
+	//   <thead>
+	//     <tr><th>Person</th><th>Age</th><th>Color</th></tr>
+	//   </thead>
+	//   <tbody>
+	//     <tr><td>Fred</td><td>34</td><td>red</td></tr>
+	//     <tr><td>Gladys</td><td>32</td><td>yellow</td></tr>
 	//     <tr><td>Belinda</td><td>58</td><td>blue</td></tr>
 	//   </tbody>
 	// </table>

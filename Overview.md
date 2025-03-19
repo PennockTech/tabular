@@ -283,8 +283,7 @@ appropriately within tabular itself.
     - `Omit` is the property key, value must be a boolean
     - indicates that the affected item should not be rendered, at all, no
       matter the value
-    - is currently only a column property, may be extended to rows in the
-      future
+    - supported on rows and columns, but not individual cells
     - is supported by all renderers
     - all renderers support this property being on Column 0 (the defaults
       pseudo-column) to set a default for the table's columns, such that this

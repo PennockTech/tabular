@@ -102,6 +102,7 @@ func (mt *MarkdownTable) RenderTo(w io.Writer) error {
 		defaultOmit  bool
 		omittedCount int
 		omitColumns  []bool
+		skipRow      bool
 	)
 	omitColumns = make([]bool, columnCount)
 	if defaultOmit, err = properties.ExpectBoolPropertyOrNil(
@@ -141,7 +142,7 @@ func (mt *MarkdownTable) RenderTo(w io.Writer) error {
 		}
 		cells := r.Cells()
 		if len(cells) > columnCount {
-			return fmt.Errorf("structural bug, columnCount %d but %d cells in row %d", columnCount, len(cells), n)
+			return fmt.Errorf("structural bug, columnCount %d but %d cells in row %d", columnCount, len(cells), n+1)
 		}
 		for i := range cells {
 			w := CellPropertyExtractWidth(&cells[i])
@@ -185,7 +186,13 @@ func (mt *MarkdownTable) RenderTo(w io.Writer) error {
 		return err
 	}
 
-	for _, r := range mt.AllRows() {
+	for rowNum, r := range mt.AllRows() {
+		if skipRow, err = properties.ExpectBoolPropertyOrNil(properties.Omit, r.GetProperty(properties.Omit), "text:renderTo", "row", rowNum+1); err != nil {
+			return err
+		}
+		if skipRow {
+			continue
+		}
 		if r.IsSeparator() {
 			continue
 		}

@@ -127,8 +127,15 @@ func (jt *JSONTable) RenderTo(w io.Writer) error {
 	if _, err = io.WriteString(w, "[\n"); err != nil {
 		return err
 	}
+	var skipRow bool
 	needComma := false
-	for _, r := range jt.AllRows() {
+	for rowNum, r := range jt.AllRows() {
+		if skipRow, err = properties.ExpectBoolPropertyOrNil(properties.Omit, r.GetProperty(properties.Omit), "text:renderTo", "row", rowNum+1); err != nil {
+			return err
+		}
+		if skipRow {
+			continue
+		}
 		if needComma {
 			if _, err = io.WriteString(w, ",\n"); err != nil {
 				return err

@@ -68,6 +68,7 @@ func (ct *CSVTable) RenderTo(w io.Writer) error {
 		defaultOmit  bool
 		omittedCount int
 		omitColumns  []bool
+		skipRow      bool
 	)
 
 	displayColumnCount := ct.NColumns()
@@ -107,7 +108,13 @@ func (ct *CSVTable) RenderTo(w io.Writer) error {
 		}
 	}
 
-	for _, r := range ct.AllRows() {
+	for rowNum, r := range ct.AllRows() {
+		if skipRow, err = properties.ExpectBoolPropertyOrNil(properties.Omit, r.GetProperty(properties.Omit), "text:renderTo", "row", rowNum+1); err != nil {
+			return err
+		}
+		if skipRow {
+			continue
+		}
 		if r.IsSeparator() {
 			continue
 		}

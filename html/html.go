@@ -102,11 +102,11 @@ const rawTableTemplateStr = `{{/**/ -}}
 	</tr>
   </thead>
   <tbody>
-{{- range $i, $row := Rows}}{{if $row.IsSeparator | not}}
+{{- range $i, $row := Rows}}{{if OmitRow $row | not}}{{if $row.IsSeparator | not}}
     <tr {{- if $.HaveRowClass}} class="{{RowClass (OnePlus $i)}}"{{end}}>
 {{- range CellsOf $row }}<td>{{.}}</td>{{end -}}
     </tr>
-{{- end}}{{end}}
+{{- end}}{{end}}{{end}}
   </tbody>
 </table>
 `
@@ -128,6 +128,9 @@ func (ht *HTMLTable) getFuncs() template.FuncMap {
 		"CellsOf":  func(r *tabular.Row) []string { return cellsToStringArray(r.Cells(), ht.cachedOmitColumns) },
 		"OnePlus":  func(i int) int { return i + 1 },
 		"Rows":     func() []*tabular.Row { return ht.Table.AllRows() },
+		"OmitRow": func(r *tabular.Row) (bool, error) {
+			return properties.ExpectBoolPropertyOrNil(properties.Omit, r.GetProperty(properties.Omit), "html:OmitRow", "row", 0)
+		},
 	}
 }
 

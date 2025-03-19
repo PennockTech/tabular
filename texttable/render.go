@@ -144,7 +144,16 @@ func (t *TextTable) RenderTo(w io.Writer) error {
 			return err
 		}
 	}
-	for _, row := range t.AllRows() {
+
+	var skipRow bool
+	var err error
+	for rowNum, row := range t.AllRows() {
+		if skipRow, err = properties.ExpectBoolPropertyOrNil(properties.Omit, row.GetProperty(properties.Omit), "text:renderTo", "row", rowNum+1); err != nil {
+			return err
+		}
+		if skipRow {
+			continue
+		}
 		// do we want a channel returning rows instead?  I don't _think_ so
 		if row.IsSeparator() {
 			if _, err := io.WriteString(w, emitter.LineSeparator()); err != nil {

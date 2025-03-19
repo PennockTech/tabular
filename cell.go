@@ -197,6 +197,12 @@ func (c *Cell) Empty() bool {
 	return c.empty
 }
 
+// Row returns the row object which the cell is part of.
+// This may be nil, if the cell has not yet been added to a row.
+func (c *Cell) Row() *Row {
+	return c.inRow
+}
+
 // LessThan returns true if the value of this cell is less than the value of
 // the other cell.  The determination of "less" is euphemistically heuristic.
 func (c *Cell) LessThan(d *Cell) bool {
