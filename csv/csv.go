@@ -1,4 +1,4 @@
-// Copyright © 2016 Pennock Tech, LLC.
+// Copyright © 2016,2025 Pennock Tech, LLC.
 // All rights reserved, except as granted under license.
 // Licensed per file LICENSE.txt
 
@@ -10,6 +10,7 @@ import (
 	"io"
 
 	"go.pennock.tech/tabular"
+	"go.pennock.tech/tabular/properties"
 )
 
 // A CSVTable wraps a tabular.Table to act as a render control for CSV output.
@@ -62,22 +63,55 @@ func (ct *CSVTable) Render() (string, error) {
 // an error.
 func (ct *CSVTable) RenderTo(w io.Writer) error {
 	ct.InvokeRenderCallbacks()
-	var err error
-	columnCount := ct.NColumns()
-	if columnCount < 1 {
-		return fmt.Errorf("csv:RenderTo: can't emit a table with %d columns", columnCount)
+	var (
+		err          error
+		defaultOmit  bool
+		omittedCount int
+		omitColumns  []bool
+	)
+
+	displayColumnCount := ct.NColumns()
+	if displayColumnCount < 1 {
+		return fmt.Errorf("csv:RenderTo: can't emit a table with %d columns", displayColumnCount)
 	}
+
+	if defaultOmit, err = properties.ExpectBoolPropertyOrNil(
+		properties.Omit,
+		ct.Column(0).GetProperty(properties.Omit),
+		"csv:RenderTo", "default column", 0); err != nil {
+		return err
+	}
+	omitColumns = make([]bool, displayColumnCount)
+	for i := range displayColumnCount {
+		omit := ct.Column(i + 1).GetProperty(properties.Omit)
+		if omit != nil {
+			if omitColumns[i], err = properties.ExpectBoolPropertyOrNil(properties.Omit, omit, "csv:RenderTo", "column", i+1); err != nil {
+				return err
+			}
+		} else {
+			omitColumns[i] = defaultOmit
+		}
+		if omitColumns[i] {
+			omittedCount++
+		}
+	}
+	if omittedCount == displayColumnCount {
+		return fmt.Errorf("csv:RenderTo: can't emit a table with all columns omitted")
+	}
+	displayColumnCount -= omittedCount
+
 	headers := ct.Headers()
 	if headers != nil {
-		if err = ct.emitRow(w, columnCount, headers); err != nil {
+		if err = ct.emitRow(w, displayColumnCount, omitColumns, headers); err != nil {
 			return err
 		}
 	}
+
 	for _, r := range ct.AllRows() {
 		if r.IsSeparator() {
 			continue
 		}
-		if err = ct.emitRow(w, columnCount, r.Cells()); err != nil {
+		if err = ct.emitRow(w, displayColumnCount, omitColumns, r.Cells()); err != nil {
 			return err
 		}
 	}
@@ -86,8 +120,10 @@ func (ct *CSVTable) RenderTo(w io.Writer) error {
 
 // emitRow handles just one row, whether from headers or body.
 // It needs to know how many columns should be in the row, so that it can add extras,
-// or error out, as needed.
-func (ct *CSVTable) emitRow(w io.Writer, columnCount int, cells []tabular.Cell) error {
+// or error out, as needed.  The displayColumnCount should be "how many to actually show",
+// pre-adjusted for columns being omitted, and is used so that "short" rows get
+// extra columns added to make up the difference.
+func (ct *CSVTable) emitRow(w io.Writer, displayColumnCount int, omitColumns []bool, cells []tabular.Cell) error {
 	// RFC4180 §2 item 7 states newlines are allowed _within_ a virtual row of
 	// CSV, as long as enclosed within double-quotes.  Wikipedia says _some_ variants
 	// use backslash-escaping instead of doubling for quotes, but it seems that
@@ -95,32 +131,49 @@ func (ct *CSVTable) emitRow(w io.Writer, columnCount int, cells []tabular.Cell) 
 	// Alas, or we coult just use fmt.Sprintf("%#v", str) to convert.
 	// We're only a generator, don't need to handle everything, so we just follow
 	// what spec exists and allow newlines within a field.  We quote _all_ fields.
-	var i int
-	var max int = len(cells)
-	if columnCount < max {
-		return fmt.Errorf("structural bug, columnCount %d but %d cells", columnCount, max)
+
+	var (
+		i     int
+		err   error
+		shown bool
+	)
+
+	// line.Write() is guaranteed to never return an error (it will panic instead)
+	var line bytes.Buffer
+	line.Grow(256)
+
+	// We shouldn't have more cells than columns, but we do in the regression
+	// tests to make sure we cleanly handle a broken table with an error instead of a panic.
+	if len(cells) > len(omitColumns) {
+		return fmt.Errorf("structural bug, max_columns %d but this row has %d cells", len(omitColumns), len(cells))
 	}
+
 	// Game-plan:
-	// 1. repeatedly print all-but-last available column with trailing separator
-	// 2. print last column, no separator
-	// 3. if too few columns in this row, repeatedly add leading separator and extra column
+	// 1. Track once we've printed a column, show a leading separator before subsequent
+	// 2. Print all columns we have
+	// 3. if too few columns in this row, repeatedly add empty extra columns
 	// if too many columns in this row, should have errored out above
 	// if only one column, the first repeated print should be skipped
-	for i = 0; i < max-1; i++ {
-		if _, err := fmt.Fprint(w, ct.csvEscape(cells[i].String()), ct.fieldSeparator); err != nil {
-			return err
+	shown = false
+	for i = range len(cells) {
+		if omitColumns[i] {
+			continue
 		}
-	}
-	if _, err := fmt.Fprint(w, ct.csvEscape(cells[i].String())); err != nil {
-		return err
-	}
-	i++
-	for ; i < columnCount; i++ {
-		if _, err := fmt.Fprint(w, ct.fieldSeparator, "\"\""); err != nil {
-			return err
+		if shown {
+			line.WriteString(ct.fieldSeparator)
 		}
+		line.WriteString(ct.csvEscape(cells[i].String()))
+		shown = true
 	}
-	if _, err := fmt.Fprintln(w); err != nil {
+	for i++; i < displayColumnCount; i++ {
+		if shown {
+			line.WriteString(ct.fieldSeparator)
+		}
+		line.WriteString("\"\"")
+		shown = true
+	}
+	line.WriteRune('\n')
+	if _, err = w.Write(line.Bytes()); err != nil {
 		return err
 	}
 	return nil

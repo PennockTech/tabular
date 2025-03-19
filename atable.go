@@ -23,9 +23,9 @@ type ATable struct {
 	headerRow                 *Row
 	rows                      []*Row
 	nColumns                  int
-	columnNames               map[string]int
-	columns                   []column    // has nColumns+1 entries
-	tableItselfCallbacks      callbackSet // only useful for render-time
+	columnNames               map[string]int // internal use, so the int places 0 as first column, not the default properties column
+	columns                   []column       // has nColumns+1 entries
+	tableItselfCallbacks      callbackSet    // only useful for render-time
 	tableCellCallbacks        callbackSet
 	tableRowAdditionCallbacks callbackSet
 }
@@ -73,6 +73,23 @@ func (t *ATable) Column(n int) *column {
 		return nil
 	}
 	return &t.columns[n]
+}
+
+// ColumnNamed returns a representation of a given column in the table.
+// The table must have had AddHeaders called.
+func (t *ATable) ColumnNamed(name string) (*column, error) {
+	if t.columnNames == nil {
+		return nil, ErrNoColumnHeaders
+	}
+	columnNumber, ok := t.columnNames[name]
+	if !ok {
+		return nil, ErrorNoSuchColumn(name)
+	}
+	c := t.Column(columnNumber + 1)
+	if c == nil {
+		return nil, ErrorColumnOutOfRange(columnNumber)
+	}
+	return c, nil
 }
 
 // NewTableWithHeaders() might allow auto-sizing?

@@ -1,4 +1,4 @@
-// Copyright © 2016,2018 Pennock Tech, LLC.
+// Copyright © 2016,2018,2025 Pennock Tech, LLC.
 // All rights reserved, except as granted under license.
 // Licensed per file LICENSE.txt
 
@@ -10,6 +10,7 @@ import (
 	"io"
 
 	"go.pennock.tech/tabular"
+	"go.pennock.tech/tabular/properties"
 	"go.pennock.tech/tabular/properties/align"
 	"go.pennock.tech/tabular/texttable/decoration"
 )
@@ -46,6 +47,14 @@ func (t *TextTable) RenderTo(w io.Writer) error {
 	t.InvokeRenderCallbacks()
 
 	columnCount := t.NColumns()
+	// API care: we allow for an empty table, and have a regression test for it,
+	// but it's okay to error on N rows with no columns (which is inconsistent
+	// but makes the default "empty is fine" work while having sanity for other
+	// scenarios).
+	if columnCount == 0 && t.NRows() > 0 {
+		return tabular.ErrNoColumnsToDisplay
+	}
+
 	headers := t.Headers() // may be nil
 
 	columnWidths := make([]int, columnCount)
@@ -75,6 +84,16 @@ func (t *TextTable) RenderTo(w io.Writer) error {
 	}
 
 	defaultAlignRaw := t.Column(0).GetProperty(align.PropertyType)
+
+	var defaultOmit, ok bool
+	defaultOmitRaw := t.Column(0).GetProperty(properties.Omit)
+	if defaultOmitRaw != nil {
+		if defaultOmit, ok = defaultOmitRaw.(bool); !ok {
+			return properties.ErrPropertyNotBool{Property: properties.Omit}
+		}
+	}
+	omittedCount := 0
+
 	for i := range columnAligns {
 		// public API, 1-based counting, I think because I wanted to reserve 0
 		// for "column-based but applies to all columns" concept?
@@ -85,6 +104,24 @@ func (t *TextTable) RenderTo(w io.Writer) error {
 		} else if defaultAlignRaw != nil {
 			columnAligns[i] = defaultAlignRaw.(align.Alignment)
 		}
+		o := c.GetProperty(properties.Omit)
+		if o != nil {
+			if b, ok := o.(bool); ok {
+				if b {
+					columnWidths[i] = -1
+					omittedCount++
+				}
+			} else {
+				return properties.ErrPropertyNotBool{Property: properties.Omit}
+			}
+		} else if defaultOmit {
+			columnWidths[i] = -1
+			omittedCount++
+		}
+	}
+
+	if omittedCount == columnCount && columnCount > 0 {
+		return tabular.ErrNoColumnsToDisplay
 	}
 
 	emitter := t.decor.ForColumnWidths(columnWidths)

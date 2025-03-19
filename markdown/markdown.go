@@ -1,4 +1,4 @@
-// Copyright © 2016,2018 Pennock Tech, LLC.
+// Copyright © 2016,2018,2025 Pennock Tech, LLC.
 // All rights reserved, except as granted under license.
 // Licensed per file LICENSE.txt
 
@@ -35,6 +35,7 @@ import (
 
 	"go.pennock.tech/tabular"
 	"go.pennock.tech/tabular/length"
+	"go.pennock.tech/tabular/properties"
 	"go.pennock.tech/tabular/properties/align"
 )
 
@@ -85,7 +86,7 @@ func (mt *MarkdownTable) Render() (string, error) {
 // an error.
 func (mt *MarkdownTable) RenderTo(w io.Writer) error {
 	mt.InvokeRenderCallbacks()
-	var err error
+
 	columnCount := mt.NColumns()
 	if columnCount < 1 {
 		return fmt.Errorf("markdown:RenderTo: can't emit a table with %d columns", columnCount)
@@ -95,6 +96,20 @@ func (mt *MarkdownTable) RenderTo(w io.Writer) error {
 	// No titles, that's not currently in the core tabular model.
 	// We do want to try to align columns, for prettyness in markdown to be edited
 	// by humans, but are willing to give up on alignment in degenerate cases (embedded newlines).
+
+	var (
+		err          error
+		defaultOmit  bool
+		omittedCount int
+		omitColumns  []bool
+	)
+	omitColumns = make([]bool, columnCount)
+	if defaultOmit, err = properties.ExpectBoolPropertyOrNil(
+		properties.Omit,
+		mt.Column(0).GetProperty(properties.Omit),
+		"markdown:RenderTo", "default column", 0); err != nil {
+		return err
+	}
 
 	headers := mt.Headers()
 	if headers == nil {
@@ -107,7 +122,19 @@ func (mt *MarkdownTable) RenderTo(w io.Writer) error {
 	}
 	for i := range headers {
 		widths[i] = CellPropertyExtractWidth(&headers[i])
+		omit := mt.Column(i + 1).GetProperty(properties.Omit)
+		if omit != nil {
+			if omitColumns[i], err = properties.ExpectBoolPropertyOrNil(properties.Omit, omit, "markdown:RenderTo", "column", i+1); err != nil {
+				return err
+			}
+		} else {
+			omitColumns[i] = defaultOmit
+		}
+		if omitColumns[i] {
+			omittedCount++
+		}
 	}
+
 	for n, r := range mt.AllRows() {
 		if r.IsSeparator() {
 			continue
@@ -126,12 +153,9 @@ func (mt *MarkdownTable) RenderTo(w io.Writer) error {
 
 	controlRowCells := make([]tabular.Cell, 0, columnCount)
 	alignments := make([]align.Alignment, columnCount)
-	for i := 0; i < columnCount; i++ {
-		width := widths[i]
-		// spec mandates at least three dashes
-		if width < 3 {
-			width = 3
-		}
+	for i := range columnCount {
+		// We don't omitColumns here, because we are generating a row of cells to print
+		width := max(widths[i], 3) // spec mandates at least three dashes
 		var al align.Alignment
 		alRaw := mt.Column(i + 1).GetProperty(align.PropertyType)
 		if alRaw != nil {
@@ -153,11 +177,11 @@ func (mt *MarkdownTable) RenderTo(w io.Writer) error {
 		controlRowCells = append(controlRowCells, tabular.NewCell(content))
 	}
 
-	if err = mt.emitRow(w, columnCount, headers, widths, alignments, true); err != nil {
+	if err = mt.emitRow(w, columnCount, headers, omitColumns, widths, alignments, true); err != nil {
 		return err
 	}
 
-	if err = mt.emitRow(w, columnCount, controlRowCells, widths, alignments, false); err != nil {
+	if err = mt.emitRow(w, columnCount, controlRowCells, omitColumns, widths, alignments, false); err != nil {
 		return err
 	}
 
@@ -165,7 +189,7 @@ func (mt *MarkdownTable) RenderTo(w io.Writer) error {
 		if r.IsSeparator() {
 			continue
 		}
-		if err = mt.emitRow(w, columnCount, r.Cells(), widths, alignments, true); err != nil {
+		if err = mt.emitRow(w, columnCount, r.Cells(), omitColumns, widths, alignments, true); err != nil {
 			return err
 		}
 	}
@@ -179,19 +203,28 @@ func (mt *MarkdownTable) emitRow(
 	w io.Writer,
 	columnCount int,
 	cells []tabular.Cell,
+	omitColumns []bool,
 	widths []int,
 	alignments []align.Alignment,
 	addPads bool,
 ) error {
-	var i int
-	var max int = len(cells)
-	if columnCount < max {
-		return fmt.Errorf("structural bug, columnCount %d but %d cells", columnCount, max)
+	if columnCount < len(cells) {
+		return fmt.Errorf("structural bug, columnCount %d but %d cells", columnCount, len(cells))
 	}
+
+	var (
+		i     int
+		shown bool
+		err   error
+		line  bytes.Buffer
+	)
+	// line.Write won't error, "only" panic, letting us reduce some boiler-plate error checking below.
+	line.Grow(256)
+
 	// Game-plan:
-	// 1. repeatedly print all-but-last available column with trailing separator
-	// 2. print last column, no separator
-	// 3. if too few columns in this row, repeatedly add leading separator and extra column
+	// 1. Track once we've printed a column, show either barLeft or barCenter before each
+	// 2. Print all columns we have
+	// 3. if too few columns in this row, repeatedly add empty extra columns
 	// if too many columns in this row, should have errored out above
 	// if only one column, the first repeated print should be skipped
 	//
@@ -199,29 +232,33 @@ func (mt *MarkdownTable) emitRow(
 	// We don't align right for escaped content.  We're after "close enough to not be jarring".
 	barLeft := "| "
 	barRight := " |"
+	barRightForcePad := " |"
 	barCenter := " | "
 	if !addPads {
 		barLeft = "|"
 		barRight = "|"
 		barCenter = "|"
 	}
-	io.WriteString(w, barLeft)
-	for i = 0; i < max-1; i++ {
-		if _, err := fmt.Fprint(w, mt.mdPaddedCellEscape(cells, widths, alignments, i), barCenter); err != nil {
-			return err
+	for i = range len(cells) {
+		if omitColumns[i] {
+			continue
 		}
+		if shown {
+			line.WriteString(barCenter)
+		} else {
+			line.WriteString(barLeft)
+		}
+		line.WriteString(mt.mdPaddedCellEscape(cells, widths, alignments, i))
+		shown = true
 	}
-	if _, err := fmt.Fprint(w, mt.mdPaddedCellEscape(cells, widths, alignments, i), barRight); err != nil {
-		return err
-	}
+	line.WriteString(barRight)
 	i++
 	for ; i < columnCount; i++ {
 		// these are the extra columns, always have one whitespace before bar
-		if _, err := io.WriteString(w, " |"); err != nil {
-			return err
-		}
+		line.WriteString(barRightForcePad)
 	}
-	if _, err := io.WriteString(w, "\n"); err != nil {
+	line.WriteRune('\n')
+	if _, err = w.Write(line.Bytes()); err != nil {
 		return err
 	}
 	return nil

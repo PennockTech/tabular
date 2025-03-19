@@ -1,4 +1,4 @@
-// Copyright © 2016,2018 Pennock Tech, LLC.
+// Copyright © 2016,2018,2025 Pennock Tech, LLC.
 // All rights reserved, except as granted under license.
 // Licensed per file LICENSE.txt
 
@@ -22,3 +22,6 @@ func (e NoSuchCellError) Error() string {
 
 // ErrMissingPropertyHolder is returned if you call SetProperty upon a nil object.
 var ErrMissingPropertyHolder = errors.New("tabular: missing item upon which to set a property")
+
+// ErrNoColumnsToDisplay is returned if there are no columns when rendering, or all columns are omitted
+var ErrNoColumnsToDisplay = errors.New("tabular: no columns to display")

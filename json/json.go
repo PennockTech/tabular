@@ -1,4 +1,4 @@
-// Copyright © 2018 Pennock Tech, LLC.
+// Copyright © 2018,2025 Pennock Tech, LLC.
 // All rights reserved, except as granted under license.
 // Licensed per file LICENSE.txt
 
@@ -65,17 +65,22 @@ func (jt *JSONTable) RenderTo(w io.Writer) error {
 		return fmt.Errorf("json:RenderTo: can't emit a table with %d columns", columnCount)
 	}
 
-	defaultSkipable := false
-	defSkipableRaw := jt.Column(0).GetProperty(properties.Skipable)
-	if defSkipableRaw != nil {
-		if b, ok := defSkipableRaw.(bool); ok {
-			defaultSkipable = b
-		} else {
-			return fmt.Errorf("json:RenderTo: default column Skipable property is non-boolean (%T)", defSkipableRaw)
-		}
+	var defaultSkipable, defaultOmit bool
+	if defaultSkipable, err = properties.ExpectBoolPropertyOrNil(
+		properties.Skipable,
+		jt.Column(0).GetProperty(properties.Skipable),
+		"json:RenderTo", "default column", 0); err != nil {
+		return err
+	}
+	if defaultOmit, err = properties.ExpectBoolPropertyOrNil(
+		properties.Omit,
+		jt.Column(0).GetProperty(properties.Omit),
+		"json:RenderTo", "default column", 0); err != nil {
+		return err
 	}
 
 	skipableColumns := make([]bool, columnCount)
+	omitColumns := make([]bool, columnCount)
 	keys := make([][]byte, columnCount)
 	seen := make(map[string]int, columnCount)
 	headers := jt.Headers()
@@ -103,13 +108,19 @@ func (jt *JSONTable) RenderTo(w io.Writer) error {
 		c := jt.Column(i + 1)
 		sk := c.GetProperty(properties.Skipable)
 		if sk != nil {
-			if b, ok := sk.(bool); ok {
-				skipableColumns[i] = b
-			} else {
-				return fmt.Errorf("json:RenderTo: column %d Skipable property is non-boolean (%T)", i+1, sk)
+			if skipableColumns[i], err = properties.ExpectBoolPropertyOrNil(properties.Skipable, sk, "json:RenderTo", "column", i+1); err != nil {
+				return err
 			}
 		} else {
 			skipableColumns[i] = defaultSkipable
+		}
+		omit := c.GetProperty(properties.Omit)
+		if omit != nil {
+			if omitColumns[i], err = properties.ExpectBoolPropertyOrNil(properties.Omit, omit, "json:RenderTo", "column", i+1); err != nil {
+				return err
+			}
+		} else {
+			omitColumns[i] = defaultOmit
 		}
 	}
 
@@ -130,7 +141,7 @@ func (jt *JSONTable) RenderTo(w io.Writer) error {
 			}
 			continue
 		}
-		if err = jt.emitRowAsJSONObject(w, skipableColumns, keys, r.Cells()); err != nil {
+		if err = jt.emitRowAsJSONObject(w, skipableColumns, omitColumns, keys, r.Cells()); err != nil {
 			return err
 		}
 		needComma = true
@@ -146,7 +157,7 @@ func (jt *JSONTable) RenderTo(w io.Writer) error {
 
 // emitRowAsJSONObject handles just one row, as a JSON object, it does not handle
 // any trailing commas outside the object, separating it from the next.
-func (jt *JSONTable) emitRowAsJSONObject(w io.Writer, skipableColumns []bool, keys [][]byte, cells []tabular.Cell) error {
+func (jt *JSONTable) emitRowAsJSONObject(w io.Writer, skipableColumns []bool, omitColumns []bool, keys [][]byte, cells []tabular.Cell) error {
 	var (
 		i, max int
 		err    error
@@ -159,6 +170,9 @@ func (jt *JSONTable) emitRowAsJSONObject(w io.Writer, skipableColumns []bool, ke
 	separator := "{"
 
 	for i = 0; i < max; i++ {
+		if omitColumns[i] {
+			continue
+		}
 		if skipableColumns[i] && cells[i].Empty() {
 			continue
 		}

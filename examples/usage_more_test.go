@@ -1,4 +1,4 @@
-// Copyright © 2018 Pennock Tech, LLC.
+// Copyright © 2018,2025 Pennock Tech, LLC.
 // These examples are deliberately for use in your code, and so while this file
 // is still covered under LICENSE.txt, only the liability disclaimers apply.
 // Copy/paste freely without the license applying directly to your code.  The
@@ -12,6 +12,11 @@ import (
 
 	"go.pennock.tech/tabular"
 	auto_table "go.pennock.tech/tabular/auto"
+	tab_csv "go.pennock.tech/tabular/csv"
+	tab_html "go.pennock.tech/tabular/html"
+	tab_json "go.pennock.tech/tabular/json"
+	tab_md "go.pennock.tech/tabular/markdown"
+	"go.pennock.tech/tabular/properties"
 	"go.pennock.tech/tabular/properties/align"
 	"go.pennock.tech/tabular/texttable/decoration"
 )
@@ -149,4 +154,258 @@ func Example_alignment2() {
 	// │      pears       │       1.90 │
 	// │ Sekai-ichi apple │      10.50 │
 	// ╰──────────────────┴────────────╯
+}
+
+func populateFourTable(t tabular.Table) {
+	t.AddHeaders("Person", "Age", "Score", "Color")
+	t.AddRowItems("Fred", 34, 0.6, "red")
+	t.AddRowItems("Gladys", 32, 0.8, "yellow")
+	t.AddRowItems("Bert", 57, 0.7, "green")
+	t.AddRowItems("Belinda", 58, 0.8, "blue")
+
+	for _, err := range t.Errors() {
+		fmt.Fprintf(os.Stderr, "table error: %s\n", err)
+	}
+
+	t.Column(2).SetProperty(align.PropertyType, align.Right)
+	// FIXME: add Column(3) align-float dot alignment
+}
+
+func Example_omit_text() {
+	t := auto_table.New(decoration.D_UTF8_LIGHT_CURVED)
+	populateFourTable(t)
+
+	show := func(tb auto_table.RenderTable) {
+		if err := tb.RenderTo(os.Stdout); err != nil {
+			fmt.Fprintf(os.Stderr, "table rendering error: %s\n", err)
+		}
+	}
+
+	show(t)
+	t.Column(3).SetProperty(properties.Omit, true)
+	show(t)
+	t.Column(3).SetProperty(properties.Omit, false) // explicitly false
+	show(t)
+	t.Column(3).SetProperty(properties.Omit, nil) // nil removes the property
+	show(t)
+
+	t.Column(3).SetProperty(properties.Omit, true)
+	t.Column(4).SetProperty(properties.Omit, true)
+	show(t)
+	t.Column(2).SetProperty(properties.Omit, true)
+	show(t)
+	t.Column(1).SetProperty(properties.Omit, true)
+	if err := t.RenderTo(os.Stdout); err == nil || err != tabular.ErrNoColumnsToDisplay {
+		if err == nil {
+			fmt.Fprintf(os.Stderr, "table did not fail to render with no columns to display\n")
+		} else {
+			fmt.Fprintf(os.Stderr, "table rendering error: %s\n", err)
+		}
+	}
+
+	// Delete all the properties, then set a default column property and override for the columns we _should_ display
+	for i := range 4 {
+		t.Column(i).SetProperty(properties.Omit, nil)
+	}
+	t.Column(0).SetProperty(properties.Omit, true)
+	for _, cname := range []string{"Person", "Color"} {
+		c, err := t.ColumnNamed(cname)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "table lookup of column %q failed: %v\n", cname, err)
+			continue
+		}
+		c.SetProperty(properties.Omit, false)
+	}
+	show(t)
+
+	// Output:
+	// ╭─────────┬─────┬───────┬────────╮
+	// │ Person  │ Age │ Score │ Color  │
+	// ├─────────┼─────┼───────┼────────┤
+	// │ Fred    │  34 │ 0.6   │ red    │
+	// │ Gladys  │  32 │ 0.8   │ yellow │
+	// │ Bert    │  57 │ 0.7   │ green  │
+	// │ Belinda │  58 │ 0.8   │ blue   │
+	// ╰─────────┴─────┴───────┴────────╯
+	// ╭─────────┬─────┬────────╮
+	// │ Person  │ Age │ Color  │
+	// ├─────────┼─────┼────────┤
+	// │ Fred    │  34 │ red    │
+	// │ Gladys  │  32 │ yellow │
+	// │ Bert    │  57 │ green  │
+	// │ Belinda │  58 │ blue   │
+	// ╰─────────┴─────┴────────╯
+	// ╭─────────┬─────┬───────┬────────╮
+	// │ Person  │ Age │ Score │ Color  │
+	// ├─────────┼─────┼───────┼────────┤
+	// │ Fred    │  34 │ 0.6   │ red    │
+	// │ Gladys  │  32 │ 0.8   │ yellow │
+	// │ Bert    │  57 │ 0.7   │ green  │
+	// │ Belinda │  58 │ 0.8   │ blue   │
+	// ╰─────────┴─────┴───────┴────────╯
+	// ╭─────────┬─────┬───────┬────────╮
+	// │ Person  │ Age │ Score │ Color  │
+	// ├─────────┼─────┼───────┼────────┤
+	// │ Fred    │  34 │ 0.6   │ red    │
+	// │ Gladys  │  32 │ 0.8   │ yellow │
+	// │ Bert    │  57 │ 0.7   │ green  │
+	// │ Belinda │  58 │ 0.8   │ blue   │
+	// ╰─────────┴─────┴───────┴────────╯
+	// ╭─────────┬─────╮
+	// │ Person  │ Age │
+	// ├─────────┼─────┤
+	// │ Fred    │  34 │
+	// │ Gladys  │  32 │
+	// │ Bert    │  57 │
+	// │ Belinda │  58 │
+	// ╰─────────┴─────╯
+	// ╭─────────╮
+	// │ Person  │
+	// ├─────────┤
+	// │ Fred    │
+	// │ Gladys  │
+	// │ Bert    │
+	// │ Belinda │
+	// ╰─────────╯
+	// ╭─────────┬────────╮
+	// │ Person  │ Color  │
+	// ├─────────┼────────┤
+	// │ Fred    │ red    │
+	// │ Gladys  │ yellow │
+	// │ Bert    │ green  │
+	// │ Belinda │ blue   │
+	// ╰─────────┴────────╯
+}
+
+func Example_omit_json() {
+	t := tabular.New()
+	populateFourTable(t)
+
+	show := func(tb tabular.Table) {
+		if err := tab_json.Wrap(tb).RenderTo(os.Stdout); err != nil {
+			fmt.Fprintf(os.Stderr, "table rendering error: %s\n", err)
+		}
+	}
+
+	show(t)
+	t.Column(3).SetProperty(properties.Omit, true)
+	fmt.Println("---")
+	show(t)
+
+	// Output:
+	// [
+	// {"Person": "Fred", "Age": 34, "Score": 0.6, "Color": "red"},
+	// {"Person": "Gladys", "Age": 32, "Score": 0.8, "Color": "yellow"},
+	// {"Person": "Bert", "Age": 57, "Score": 0.7, "Color": "green"},
+	// {"Person": "Belinda", "Age": 58, "Score": 0.8, "Color": "blue"}
+	// ]
+	// ---
+	// [
+	// {"Person": "Fred", "Age": 34, "Color": "red"},
+	// {"Person": "Gladys", "Age": 32, "Color": "yellow"},
+	// {"Person": "Bert", "Age": 57, "Color": "green"},
+	// {"Person": "Belinda", "Age": 58, "Color": "blue"}
+	// ]
+}
+
+func Example_omit_csv() {
+	t := tabular.New()
+	populateFourTable(t)
+
+	show := func(tb tabular.Table) {
+		if err := tab_csv.Wrap(tb).RenderTo(os.Stdout); err != nil {
+			fmt.Fprintf(os.Stderr, "table rendering error: %s\n", err)
+		}
+	}
+
+	show(t)
+	t.Column(3).SetProperty(properties.Omit, true)
+	fmt.Println("---")
+	show(t)
+
+	// Output:
+	// "Person","Age","Score","Color"
+	// "Fred","34","0.6","red"
+	// "Gladys","32","0.8","yellow"
+	// "Bert","57","0.7","green"
+	// "Belinda","58","0.8","blue"
+	// ---
+	// "Person","Age","Color"
+	// "Fred","34","red"
+	// "Gladys","32","yellow"
+	// "Bert","57","green"
+	// "Belinda","58","blue"
+}
+
+func Example_omit_markdown() {
+	t := tabular.New()
+	populateFourTable(t)
+
+	show := func(tb tabular.Table) {
+		if err := tab_md.Wrap(tb).RenderTo(os.Stdout); err != nil {
+			fmt.Fprintf(os.Stderr, "table rendering error: %s\n", err)
+		}
+	}
+
+	show(t)
+	t.Column(3).SetProperty(properties.Omit, true)
+	fmt.Println("---")
+	show(t)
+
+	// Output:
+	// | Person  | Age | Score | Color  |
+	// | ------- | ---:| ----- | ------ |
+	// | Fred    |  34 | 0.6   | red    |
+	// | Gladys  |  32 | 0.8   | yellow |
+	// | Bert    |  57 | 0.7   | green  |
+	// | Belinda |  58 | 0.8   | blue   |
+	// ---
+	// | Person  | Age | Color  |
+	// | ------- | ---:| ------ |
+	// | Fred    |  34 | red    |
+	// | Gladys  |  32 | yellow |
+	// | Bert    |  57 | green  |
+	// | Belinda |  58 | blue   |
+}
+
+func Example_omit_html() {
+	t := tabular.New()
+	populateFourTable(t)
+
+	show := func(tb tabular.Table) {
+		if err := tab_html.Wrap(tb).RenderTo(os.Stdout); err != nil {
+			fmt.Fprintf(os.Stderr, "table rendering error: %s\n", err)
+		}
+	}
+
+	show(t)
+	t.Column(3).SetProperty(properties.Omit, true)
+	fmt.Println("---")
+	show(t)
+
+	// Output:
+	// <table>
+	//   <thead>
+	//     <tr><th>Person</th><th>Age</th><th>Score</th><th>Color</th></tr>
+	//   </thead>
+	//   <tbody>
+	//     <tr><td>Fred</td><td>34</td><td>0.6</td><td>red</td></tr>
+	//     <tr><td>Gladys</td><td>32</td><td>0.8</td><td>yellow</td></tr>
+	//     <tr><td>Bert</td><td>57</td><td>0.7</td><td>green</td></tr>
+	//     <tr><td>Belinda</td><td>58</td><td>0.8</td><td>blue</td></tr>
+	//   </tbody>
+	// </table>
+	// ---
+	// <table>
+	//   <thead>
+	//     <tr><th>Person</th><th>Age</th><th>Color</th></tr>
+	//   </thead>
+	//   <tbody>
+	//     <tr><td>Fred</td><td>34</td><td>red</td></tr>
+	//     <tr><td>Gladys</td><td>32</td><td>yellow</td></tr>
+	//     <tr><td>Bert</td><td>57</td><td>green</td></tr>
+	//     <tr><td>Belinda</td><td>58</td><td>blue</td></tr>
+	//   </tbody>
+	// </table>
+
 }

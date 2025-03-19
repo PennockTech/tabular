@@ -1,4 +1,4 @@
-// Copyright © 2016 Pennock Tech, LLC.
+// Copyright © 2016,2025 Pennock Tech, LLC.
 // All rights reserved, except as granted under license.
 // Licensed per file LICENSE.txt
 
@@ -17,6 +17,7 @@ import (
 	"io"
 
 	"go.pennock.tech/tabular"
+	"go.pennock.tech/tabular/properties"
 )
 
 // HTMLTable wraps a tabular Table to provide some extra information used
@@ -35,6 +36,8 @@ type HTMLTable struct {
 	rowClassCtx       interface{}
 
 	template *template.Template
+
+	cachedOmitColumns []bool
 }
 
 // Wrap returns an HTMLTable rendering object for the given tabular Table.
@@ -108,19 +111,21 @@ const rawTableTemplateStr = `{{/**/ -}}
 </table>
 `
 
-func cellsToStringArray(cells []tabular.Cell) []string {
-	r := make([]string, len(cells))
+func cellsToStringArray(cells []tabular.Cell, omit []bool) []string {
+	r := make([]string, 0, len(cells))
 	for i := range cells {
-		r[i] = cells[i].String()
+		if !omit[i] {
+			r = append(r, cells[i].String())
+		}
 	}
 	return r
 }
 
 func (ht *HTMLTable) getFuncs() template.FuncMap {
 	return template.FuncMap{
-		"Headers":  func() []string { return cellsToStringArray(ht.Table.Headers()) },
+		"Headers":  func() []string { return cellsToStringArray(ht.Table.Headers(), ht.cachedOmitColumns) },
 		"RowClass": func(i int) template.HTMLAttr { return ht.rowClassGenerator(i, ht.rowClassCtx) },
-		"CellsOf":  func(r *tabular.Row) []string { return cellsToStringArray(r.Cells()) },
+		"CellsOf":  func(r *tabular.Row) []string { return cellsToStringArray(r.Cells(), ht.cachedOmitColumns) },
 		"OnePlus":  func(i int) int { return i + 1 },
 		"Rows":     func() []*tabular.Row { return ht.Table.AllRows() },
 	}
@@ -129,6 +134,13 @@ func (ht *HTMLTable) getFuncs() template.FuncMap {
 // RenderTo writes the table to the provided writer, stopping if it should encounter an error.
 func (ht *HTMLTable) RenderTo(w io.Writer) (err error) {
 	ht.InvokeRenderCallbacks()
+
+	if err = ht.populateOmitCache(); err != nil {
+		return
+	}
+	defer func() {
+		ht.cachedOmitColumns = nil
+	}()
 
 	if ht.template == nil {
 		ht.template, err = template.New(ht.TemplateName).Funcs(ht.getFuncs()).Parse(rawTableTemplateStr)
@@ -151,4 +163,33 @@ func (ht *HTMLTable) RenderTo(w io.Writer) (err error) {
 	}
 
 	return ht.template.Execute(w, renderData)
+}
+
+func (ht *HTMLTable) populateOmitCache() error {
+	ht.cachedOmitColumns = make([]bool, ht.NColumns())
+
+	var (
+		defaultOmit bool
+		err         error
+	)
+
+	if defaultOmit, err = properties.ExpectBoolPropertyOrNil(
+		properties.Omit,
+		ht.Column(0).GetProperty(properties.Omit),
+		"html:RenderTo", "default column", 0); err != nil {
+		return err
+	}
+
+	for i := range ht.NColumns() {
+		omit := ht.Column(i + 1).GetProperty(properties.Omit)
+		if omit != nil {
+			if ht.cachedOmitColumns[i], err = properties.ExpectBoolPropertyOrNil(properties.Omit, omit, "html:RenderTo", "column", i+1); err != nil {
+				return err
+			}
+		} else {
+			ht.cachedOmitColumns[i] = defaultOmit
+		}
+	}
+
+	return nil
 }

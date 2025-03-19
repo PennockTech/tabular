@@ -1,4 +1,4 @@
-// Copyright © 2016,2018 Pennock Tech, LLC.
+// Copyright © 2016,2018,2025 Pennock Tech, LLC.
 // All rights reserved, except as granted under license.
 // Licensed per file LICENSE.txt
 
@@ -35,7 +35,9 @@ func (d *Decoration) ForColumnWidths(widths []int) emitter {
 	// So might not use this.
 	totalWidth := 1 + len(widths)
 	for _, w := range widths {
-		totalWidth += w + 2
+		if w >= 0 {
+			totalWidth += w + 2
+		}
 	}
 	return emitter{
 		colWidths:  widths,
@@ -57,8 +59,10 @@ func (e emitter) commonTemplateLine(left, horiz, cross, right string) string {
 	fields = append(fields, left)
 	if len(e.colWidths) > 0 {
 		for i := range e.colWidths {
-			fields = append(fields, strings.Repeat(horiz, 2+e.colWidths[i]))
-			fields = append(fields, cross)
+			if e.colWidths[i] >= 0 {
+				fields = append(fields, strings.Repeat(horiz, 2+e.colWidths[i]))
+				fields = append(fields, cross)
+			}
 		}
 		fields[len(fields)-1] = right
 	} else {
@@ -118,9 +122,11 @@ func (e emitter) commonRenderedLine(ds DividerSet, cellStrs []WidthString, colAl
 		fields = append(fields, ds.Left)
 	}
 	for i := range e.colWidths {
-		fields = append(fields, cellStrs[i].WithinWidthAligned(e.colWidths[i], colAligns[i]))
-		if ds.Inner != "" {
-			fields = append(fields, ds.Inner)
+		if e.colWidths[i] >= 0 {
+			fields = append(fields, cellStrs[i].WithinWidthAligned(e.colWidths[i], colAligns[i]))
+			if ds.Inner != "" {
+				fields = append(fields, ds.Inner)
+			}
 		}
 	}
 	if ds.Right != "" && ds.Inner != "" {

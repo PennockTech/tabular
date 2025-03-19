@@ -23,6 +23,7 @@ type Table interface {
 	AddRowItems(items ...interface{}) Table
 	CellAt(location CellLocation) (*Cell, error)
 	Column(int) *column
+	ColumnNamed(string) (*column, error)
 	SortByNamedColumn(string, SortOrder) error
 	SortByColumnNumber(int, SortOrder) error
 

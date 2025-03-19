@@ -84,7 +84,7 @@ type brokenTable struct {
 
 func (b brokenTable) NColumns() int { return b.overrideColumns }
 
-func TestBrokenTables(t *testing.T) {
+func TestBrokenTablesMarkdown(t *testing.T) {
 	T := testlib.NewT(t)
 	defer T.Finish()
 
