@@ -32,8 +32,8 @@ type HTMLTable struct {
 	Caption      string
 	TemplateName string
 
-	rowClassGenerator func(rowNum int, ctx interface{}) template.HTMLAttr
-	rowClassCtx       interface{}
+	rowClassGenerator func(rowNum int, ctx any) template.HTMLAttr
+	rowClassCtx       any
 
 	template *template.Template
 
@@ -72,8 +72,8 @@ func New() *HTMLTable {
 // coerced in this library, to ensure that people writing the callbacks see
 // the data-safety type at the time of implementation, to provoke careful thought.
 func (ht *HTMLTable) SetRowClassGenerator(
-	callable func(rowNum int, ctx interface{}) template.HTMLAttr,
-	userCtx interface{},
+	callable func(rowNum int, ctx any) template.HTMLAttr,
+	userCtx any,
 ) *HTMLTable {
 	ht.rowClassGenerator = callable
 	ht.rowClassCtx = userCtx

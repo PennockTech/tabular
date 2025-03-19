@@ -169,13 +169,10 @@ func (t *TextTable) RowToLinesOfWidthStrings(
 	cells []tabular.Cell,
 	columnCount int,
 ) [][]decoration.WidthString {
-	max := len(cells)
-	if columnCount < max {
-		max = columnCount
-	}
+	max := min(columnCount, len(cells))
 	columns := make([][]decoration.WidthString, max)
 	lineCount := 1
-	for i := 0; i < max; i++ {
+	for i := range max {
 		columns[i] = CellPropertyExtractLinesWidths(&cells[i])
 		if len(columns[i]) > lineCount {
 			lineCount = len(columns[i])
@@ -183,9 +180,9 @@ func (t *TextTable) RowToLinesOfWidthStrings(
 	}
 
 	lines := make([][]decoration.WidthString, lineCount)
-	for l := 0; l < lineCount; l++ {
+	for l := range lineCount {
 		lines[l] = make([]decoration.WidthString, columnCount)
-		for c := 0; c < max; c++ {
+		for c := range max {
 			if l >= len(columns[c]) {
 				lines[l][c] = decoration.WidthString{}
 			} else {

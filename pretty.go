@@ -33,7 +33,7 @@ func (t *ATable) GoString() string {
 	}
 
 	fmt.Fprint(buf, ".Columns{")
-	for i := 0; i < len(t.columns); i++ {
+	for i := range t.columns {
 		if i > 0 {
 			fmt.Fprint(buf, ", ")
 		}

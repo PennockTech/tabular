@@ -90,7 +90,7 @@ type flipflop struct {
 	isBlue bool
 }
 
-func blueGreenFlipflop(rowNum int, ffint interface{}) template.HTMLAttr {
+func blueGreenFlipflop(rowNum int, ffint any) template.HTMLAttr {
 	ff := ffint.(*flipflop)
 	ff.isBlue = !ff.isBlue
 	if ff.isBlue {

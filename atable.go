@@ -157,7 +157,7 @@ func (t *ATable) Headers() []Cell {
 
 // AddHeaders creates a header-row from the passed items and sets it
 // as the table's header row.  The table is returned.
-func (t *ATable) AddHeaders(items ...interface{}) Table {
+func (t *ATable) AddHeaders(items ...any) Table {
 	t.resizeColumnsAtLeast(len(items))
 	hr := NewRowWithCapacity(len(items))
 	columnNames := make(map[string]int, len(items))

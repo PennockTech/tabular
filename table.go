@@ -16,11 +16,11 @@ type Table interface {
 	NColumns() int
 	NRows() int
 	Headers() []Cell
-	AddHeaders(items ...interface{}) Table
+	AddHeaders(items ...any) Table
 	AllRows() []*Row
 	NewRowSizedFor() *Row
 	AppendNewRow() *Row
-	AddRowItems(items ...interface{}) Table
+	AddRowItems(items ...any) Table
 	CellAt(location CellLocation) (*Cell, error)
 	Column(int) *column
 	ColumnNamed(string) (*column, error)

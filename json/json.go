@@ -90,7 +90,7 @@ func (jt *JSONTable) RenderTo(w io.Writer) error {
 	if len(headers) < columnCount {
 		return fmt.Errorf("json:RenderTo: require %d headers for keys, only found %d", columnCount, len(headers))
 	}
-	for i := 0; i < columnCount; i++ {
+	for i := range columnCount {
 		s := headers[i].String()
 		if s == "" {
 			return fmt.Errorf("json:RenderTo: column %d has an empty header, unusable as a key", i+1)
@@ -169,7 +169,7 @@ func (jt *JSONTable) emitRowAsJSONObject(w io.Writer, skipableColumns []bool, om
 
 	separator := "{"
 
-	for i = 0; i < max; i++ {
+	for i = range max {
 		if omitColumns[i] {
 			continue
 		}

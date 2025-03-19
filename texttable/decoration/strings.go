@@ -26,10 +26,7 @@ func (ws WidthString) WithinWidthAligned(available int, howAlign align.Alignment
 	}
 
 	// this will need to change when we support more than basic left/right alignment
-	pad := available - ws.W
-	if pad < 0 {
-		pad = 0
-	}
+	pad := max(available-ws.W, 0)
 	switch howAlign {
 	case align.Left:
 		return ws.S + strings.Repeat(" ", pad)

@@ -31,7 +31,7 @@ type Fielder interface {
 // AnonFielder to avoid caller having to iterate an []interface{}
 // to construct strings; we then just do cell breakdown on each.
 type AnonFielder interface {
-	AnonFields() []interface{}
+	AnonFields() []any
 }
 
 // TerminalCellWidther should be implemented to override tabular's conception

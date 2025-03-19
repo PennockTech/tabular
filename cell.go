@@ -16,7 +16,7 @@ import (
 // from it.  If the object added is mutated after addition, it is the mutator's
 // responsibility to call Update.
 type Cell struct {
-	raw    interface{}
+	raw    any
 	str    string
 	width  int
 	height int
@@ -45,7 +45,7 @@ type Cell struct {
 
 // NewCell creates a Cell, handling object rendering at init time.
 // TODO: handle rune as rune, or as int?  Any special flags to use?
-func NewCell(object interface{}) Cell {
+func NewCell(object any) Cell {
 	c := Cell{raw: object, empty: false}
 	c.Update()
 	return c
@@ -122,7 +122,7 @@ func (c *Cell) updateCache() {
 }
 
 // Item returns the object stored inside a cell.
-func (c Cell) Item() interface{} {
+func (c Cell) Item() any {
 	return c.raw
 }
 

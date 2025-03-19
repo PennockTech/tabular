@@ -166,14 +166,14 @@ func (tb *ATable) RegisterPropertyCallback(
 // PropertyOwner is the high-level interface satisfied by anything
 // which holds metadata in the form of properties.
 type PropertyOwner interface {
-	SetProperty(interface{}, interface{}) error
-	GetProperty(interface{}) interface{}
+	SetProperty(any, any) error
+	GetProperty(any) any
 }
 
 // propertySet is the type of anything which can "be" a property, which
 // boils down to an empty property or a value property.
 type propertySet interface {
-	Value(key interface{}) interface{}
+	Value(key any) any
 }
 
 // propertyImpl is something which can be embedded in a struct to turn
@@ -186,7 +186,7 @@ type propertyImpl struct {
 // If no such property has been stored, then nil will be returned.
 // Thus we can't tell the difference between "nil stored" and "nothing stored",
 // thus property storage is free to treat storing "nil" as "remove".
-func (pi *propertyImpl) GetProperty(key interface{}) interface{} {
+func (pi *propertyImpl) GetProperty(key any) any {
 	if pi.properties == nil {
 		return nil
 	}
@@ -196,7 +196,7 @@ func (pi *propertyImpl) GetProperty(key interface{}) interface{} {
 // SetProperty sets the value stored for a given key, removing any other
 // values stored for that key first.
 // If the value is nil then no value will be stored.
-func (pi *propertyImpl) SetProperty(key, value interface{}) error {
+func (pi *propertyImpl) SetProperty(key, value any) error {
 	if pi == nil {
 		return ErrMissingPropertyHolder
 	}
@@ -211,7 +211,7 @@ func (pi *propertyImpl) SetProperty(key, value interface{}) error {
 
 type emptyProperty int
 
-func (*emptyProperty) Value(key interface{}) interface{} {
+func (*emptyProperty) Value(key any) any {
 	return nil
 }
 
@@ -225,7 +225,7 @@ func NoProperty() propertySet {
 	return noProperty
 }
 
-func withValue(parent propertySet, key, val interface{}) propertySet {
+func withValue(parent propertySet, key, val any) propertySet {
 	if key == nil {
 		panic("nil property key")
 	}
@@ -239,7 +239,7 @@ func withValue(parent propertySet, key, val interface{}) propertySet {
 // delegates all other calls to the embedded propertySet.
 type valueProperty struct {
 	chain    propertySet
-	key, val interface{}
+	key, val any
 }
 
 func (v *valueProperty) GoString() string {
@@ -249,7 +249,7 @@ func (v *valueProperty) GoString() string {
 	return fmt.Sprintf("%#v.withValue(%#v, %#v)", v.chain, v.key, v.val)
 }
 
-func (v *valueProperty) Value(key interface{}) interface{} {
+func (v *valueProperty) Value(key any) any {
 	if v.key == key {
 		return v.val
 	}
@@ -264,7 +264,7 @@ func (v *valueProperty) Value(key interface{}) interface{} {
 // keys have been added, then this won't remove them all, it's the
 // responsibility of key/value adding code to strip out existing identical keys
 // first.
-func stripReturnValue(ps propertySet, key interface{}) (interface{}, propertySet) {
+func stripReturnValue(ps propertySet, key any) (any, propertySet) {
 	top, ok := ps.(*valueProperty)
 	if !ok {
 		return nil, ps
@@ -278,7 +278,7 @@ func stripReturnValue(ps propertySet, key interface{}) (interface{}, propertySet
 	return stripChainReturnValue(top, top, top.chain, key)
 }
 
-func stripChainReturnValue(top, parent *valueProperty, this_ propertySet, key interface{}) (interface{}, propertySet) {
+func stripChainReturnValue(top, parent *valueProperty, this_ propertySet, key any) (any, propertySet) {
 	this, ok := this_.(*valueProperty)
 	if !ok {
 		// we break the chain if non-valueProperty are intermingled

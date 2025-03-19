@@ -81,7 +81,7 @@ func (r *Row) Cells() []Cell {
 
 // AddRowItems creates a row from the passed items and adds it to the table, returning
 // the table for chaining.
-func (t *ATable) AddRowItems(items ...interface{}) Table {
+func (t *ATable) AddRowItems(items ...any) Table {
 	r := NewRowWithCapacity(len(items))
 	for i := range items {
 		r.Add(NewCell(items[i]))
