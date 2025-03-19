@@ -1,4 +1,4 @@
-// Copyright © 2018 Pennock Tech, LLC.
+// Copyright © 2018,2025 Pennock Tech, LLC.
 // These examples are deliberately for use in your code, and so while this file
 // is still covered under LICENSE.txt, only the liability disclaimers apply.
 // Copy/paste freely without the license applying directly to your code.  The
