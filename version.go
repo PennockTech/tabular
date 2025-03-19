@@ -14,7 +14,7 @@ package tabular // import "go.pennock.tech/tabular"
 var LinkerSpecifiedVersion string
 
 const packageVersionName = "tabular"
-const APIVersion string = "1.0"
+const APIVersion string = "1.3"
 
 func Versions() []string {
 	vl := make([]string, 0, 2)
