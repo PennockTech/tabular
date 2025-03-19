@@ -11,6 +11,10 @@ Sub-packages provide for rendering a TextTable which is designed for a
 fixed-cell grid layout of character cells, such as a Unix TTY; for rendering as
 an HTML table; for rendering as a CSV.
 
+Most clients doing table rendering should probably import
+"go.pennock.tech/tabular/auto" and use `auto.New("texttable")` to get an object
+which can be easily rendered.
+
 The core package provides a Table interface; each sub-package embeds a Table in
 their own core object, so all methods in the Table interface can be directly
 used upon such objects.  These provide for your basic addition of cells, etc.

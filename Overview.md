@@ -277,12 +277,19 @@ appropriately within tabular itself.
   + Skipability:
     - `Skipable` is the property key, value must be a boolean
     - non-boolean values may result in panic
-    - currently only a column property, and is permitted to be used by
-      renderers to control whether or not to skip a column entirely,
-      or for the JSON rendered to skip including a field for items in that
-      column if empty.
-      + At present, is only used by JSON, have not yet implemented a
-        multiple-pass system to let it be used for entire-column suppression.
+    - currently only a column property, used by JSON to indicate to skip
+      fields in that column, if and only if those cells are empty.
+  + Omission:
+    - `Omit` is the property key, value must be a boolean
+    - indicates that the affected item should not be rendered, at all, no
+      matter the value
+    - is currently only a column property, may be extended to rows in the
+      future
+    - is supported by all renderers
+    - all renderers support this property being on Column 0 (the defaults
+      pseudo-column) to set a default for the table's columns, such that this
+      bool can be set explicitly false on some columns to only render those
+      columns.
 * `go.pennock.tech/tabular/properties/align`
   + controls for text alignment; currently this is limited to very simplistic
     `Left`, `Center` and `Right` values, which may be used as values for the
