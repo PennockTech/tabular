@@ -10,6 +10,7 @@ import (
 	"io"
 
 	"go.pennock.tech/tabular"
+	"go.pennock.tech/tabular/color"
 	"go.pennock.tech/tabular/properties"
 	"go.pennock.tech/tabular/properties/align"
 	"go.pennock.tech/tabular/texttable/decoration"
@@ -127,6 +128,13 @@ func (t *TextTable) RenderTo(w io.Writer) error {
 	emitter := t.decor.ForColumnWidths(columnWidths)
 	emitter.SetEOL("\n")
 
+	colorON := t.colorBegin()
+	colorCELL := t.colorCellBegin()
+	colorOFF := t.colorEnd()
+	if colorON != "" {
+		emitter.SetANSIEscapes(colorON, colorOFF, colorCELL)
+	}
+
 	if headers != nil {
 		if _, err := io.WriteString(w, emitter.LineHeaderTop()); err != nil {
 			return err
@@ -201,4 +209,33 @@ func (t *TextTable) RowToLinesOfWidthStrings(
 	}
 
 	return lines
+}
+
+func (t *TextTable) colorBegin() string {
+	b := &bytes.Buffer{}
+	b.Grow(80)
+	if t.fgcolor != nil {
+		io.WriteString(b, t.fgcolor.AnsiEscapeFG())
+	}
+	if t.bgcolor != nil {
+		io.WriteString(b, t.bgcolor.AnsiEscapeBG())
+	}
+	return b.String()
+}
+
+func (t *TextTable) colorCellBegin() string {
+	if t.bgcolor == nil {
+		return color.ResetColor
+	}
+	if t.bgflags&colorBGSolid != 0 {
+		return color.ResetColor + t.bgcolor.AnsiEscapeBG()
+	}
+	return color.ResetColor
+}
+
+func (t *TextTable) colorEnd() string {
+	if t.fgcolor != nil || t.bgcolor != nil {
+		return color.ResetColor
+	}
+	return ""
 }

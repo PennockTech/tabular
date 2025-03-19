@@ -7,6 +7,7 @@ package texttable // import "go.pennock.tech/tabular/texttable"
 import (
 	"fmt"
 
+	"go.pennock.tech/tabular/color"
 	"go.pennock.tech/tabular/texttable/decoration"
 )
 
@@ -29,4 +30,58 @@ func (t *TextTable) SetDecorationNamed(n string) (*TextTable, error) {
 		return t, fmt.Errorf("unknown decoration name %q", n)
 	}
 	return t, nil
+}
+
+// SetFGColorNamed selects a color by name for the table borders.
+func (t *TextTable) SetFGColorNamed(n string) (*TextTable, error) {
+	c, err := color.ByHTMLNamedColor(n)
+	if err != nil {
+		return t, err
+	}
+	t.fgcolor = &c
+	return t, nil
+}
+
+// SetFGColor directly assigns a color to the table borders.
+func (t *TextTable) SetFGColor(c color.Color) *TextTable {
+	t.fgcolor = &c
+	return t
+}
+
+// RemoveFGColor removes the color for the table borders.
+func (t *TextTable) RemoveFGColor() *TextTable {
+	t.fgcolor = nil
+	return t
+}
+
+// SetBGColorNamed selects a color by name for the table borders.
+func (t *TextTable) SetBGColorNamed(n string) (*TextTable, error) {
+	c, err := color.ByHTMLNamedColor(n)
+	if err != nil {
+		return t, err
+	}
+	t.bgcolor = &c
+	return t, nil
+}
+
+// SetBGColor directly assigns a color to the table borders.
+func (t *TextTable) SetBGColor(c color.Color) *TextTable {
+	t.bgcolor = &c
+	return t
+}
+
+// RemoveBGColor removes the color for the table borders.
+func (t *TextTable) RemoveBGColor() *TextTable {
+	t.bgcolor = nil
+	return t
+}
+
+// SetBGSolid causes the table to not reset the background color for cell content
+func (t *TextTable) SetBGSolid(onoff bool) *TextTable {
+	if onoff {
+		t.bgflags |= colorBGSolid
+	} else {
+		t.bgflags &= ^colorBGSolid
+	}
+	return t
 }

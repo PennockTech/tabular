@@ -7,7 +7,9 @@ package auto_test // import "go.pennock.tech/tabular/auto"
 import (
 	"bytes"
 	"reflect"
+	"regexp"
 	"sort"
+	"strings"
 	"testing"
 
 	"github.com/liquidgecka/testlib"
@@ -121,4 +123,74 @@ func TestListStyles(t *testing.T) {
 			T.Errorf("ListStyles() missing expected value %q", expect)
 		}
 	}
+}
+
+func TestColor(t *testing.T) {
+	T := testlib.NewT(t)
+	defer T.Finish()
+
+	tb := auto.New("texttable.utf8-light-curved.red.blue")
+	populate(T, tb)
+	buf := &bytes.Buffer{}
+	err := tb.RenderTo(buf)
+	T.ExpectSuccess(err, "rendered to buffer")
+
+	const fg = "\x1b[38;2;255;0;0m"
+	const bg = "\x1b[48;2;0;0;255m"
+	const rs = "\x1b[m"
+	const START = fg + bg
+	const STOP = rs
+	const BGONLY = rs + bg
+
+	shouldHaveClean := "" +
+		"╭────────┬────────────┬──────╮\n" +
+		"│ foo    │ loquacious │ x    │\n" +
+		"├────────┼────────────┼──────┤\n" +
+		"│ 42     │ .          │ fred │\n" +
+		"│ snerty │ word       │ r    │\n" +
+		"├────────┼────────────┼──────┤\n" +
+		"│        │ true       │      │\n" +
+		"╰────────┴────────────┴──────╯\n"
+
+	expected := "" +
+		"START╭────────┬────────────┬──────╮STOP\n" +
+		"START│STOP foo    START│STOP loquacious START│STOP x    START│STOP\n" +
+		"START├────────┼────────────┼──────┤STOP\n" +
+		"START│STOP 42     START│STOP .          START│STOP fred START│STOP\n" +
+		"START│STOP snerty START│STOP word       START│STOP r    START│STOP\n" +
+		"START├────────┼────────────┼──────┤STOP\n" +
+		"START│STOP        START│STOP true       START│STOP      START│STOP\n" +
+		"START╰────────┴────────────┴──────╯STOP\n"
+	expected = strings.Replace(expected, "START", START, -1)
+	expected = strings.Replace(expected, "STOP", STOP, -1)
+
+	have := buf.String()
+	T.Equal(have, expected, "got colored table text")
+
+	re := regexp.MustCompile(`\x1b\[[0-9;]*m`)
+	have = re.ReplaceAllString(have, "")
+
+	T.Equal(have, shouldHaveClean, "colored table strips down to expected clean state")
+
+	buf.Reset()
+	tt := tb.(*texttable.TextTable)
+	tt.SetBGSolid(true)
+	err = tb.RenderTo(buf)
+	T.ExpectSuccess(err, "rendered to buffer")
+
+	expectedSolid := "" +
+		"START╭────────┬────────────┬──────╮STOP\n" +
+		"START│BGONLY foo    START│BGONLY loquacious START│BGONLY x    START│STOP\n" +
+		"START├────────┼────────────┼──────┤STOP\n" +
+		"START│BGONLY 42     START│BGONLY .          START│BGONLY fred START│STOP\n" +
+		"START│BGONLY snerty START│BGONLY word       START│BGONLY r    START│STOP\n" +
+		"START├────────┼────────────┼──────┤STOP\n" +
+		"START│BGONLY        START│BGONLY true       START│BGONLY      START│STOP\n" +
+		"START╰────────┴────────────┴──────╯STOP\n"
+	expectedSolid = strings.Replace(expectedSolid, "START", START, -1)
+	expectedSolid = strings.Replace(expectedSolid, "STOP", STOP, -1)
+	expectedSolid = strings.Replace(expectedSolid, "BGONLY", BGONLY, -1)
+
+	have = buf.String()
+	T.Equal(have, expectedSolid, "got solid colored table text")
 }

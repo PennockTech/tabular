@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"go.pennock.tech/tabular"
+	"go.pennock.tech/tabular/color"
 	"go.pennock.tech/tabular/csv"
 	"go.pennock.tech/tabular/html"
 	"go.pennock.tech/tabular/json"
@@ -38,27 +39,49 @@ type RenderTable interface {
 // The style sections after the first are interpreted dependent upon the first
 // section and not yet locked down by API.
 func Wrap(t tabular.Table, style string) RenderTable {
+	var rt RenderTable
 	sections := strings.Split(style, ".")
 	switch strings.ToLower(sections[0]) {
 	case "csv":
-		return csv.Wrap(t)
+		rt = csv.Wrap(t)
 	case "html":
 		// TODO: do we want to take `html.caption="foo.bar".class="a b c".whatever ?
-		return html.Wrap(t)
+		rt = html.Wrap(t)
 	case "markdown":
-		return markdown.Wrap(t)
+		rt = markdown.Wrap(t)
 	case "json":
-		return json.Wrap(t)
+		rt = json.Wrap(t)
 	case "texttable":
 		tt := texttable.Wrap(t)
-		if len(sections) > 1 {
-			tt.SetDecorationNamed(sections[1])
-		}
-		return tt
+		setColorsOrDecorationsFromSections(tt, sections[1:])
+		rt = tt
 	default:
 		tt := texttable.Wrap(t)
-		tt.SetDecorationNamed(sections[0])
-		return tt
+		setColorsOrDecorationsFromSections(tt, sections)
+		rt = tt
+	}
+	return rt
+}
+
+func setColorsOrDecorationsFromSections(tt *texttable.TextTable, sections []string) {
+	doneFG, doneBG, doneDecoration := false, false, false
+	for _, section := range sections {
+		if c, err := color.ByHTMLNamedColor(section); err == nil {
+			if doneFG && doneBG {
+				continue
+			} else if doneFG {
+				tt.SetBGColor(c)
+				doneBG = true
+			} else {
+				tt.SetFGColor(c)
+				doneFG = true
+			}
+		} else if section == "solid" {
+			tt.SetBGSolid(true)
+		} else if !doneDecoration {
+			tt.SetDecorationNamed(section)
+			doneDecoration = true
+		}
 	}
 }
 

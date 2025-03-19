@@ -19,10 +19,13 @@ type DividerSet struct {
 }
 
 type emitter struct {
-	colWidths  []int
-	totalWidth int
-	decor      *Decoration
-	eol        string
+	colWidths    []int
+	totalWidth   int
+	decor        *Decoration
+	eol          string
+	escStart     string
+	escStop      string
+	escCellStart string
 }
 
 // ForColumnWidths returns an emitter object with methods for getting
@@ -51,11 +54,22 @@ func (e *emitter) SetEOL(eol string) {
 	e.eol = eol
 }
 
+func (e *emitter) SetANSIEscapes(escStart, escStop, escCellStart string) {
+	e.escStart = escStart
+	e.escStop = escStop
+	if escCellStart != "" {
+		e.escCellStart = escCellStart
+	} else if e.escStart != "" {
+		e.escCellStart = e.escStart
+	}
+}
+
 func (e emitter) commonTemplateLine(left, horiz, cross, right string) string {
 	if e.decor.isBoxless {
 		return ""
 	}
-	fields := make([]string, 0, len(e.colWidths)*2+2)
+	fields := make([]string, 0, len(e.colWidths)*2+4)
+	fields = append(fields, e.escStart)
 	fields = append(fields, left)
 	if len(e.colWidths) > 0 {
 		for i := range e.colWidths {
@@ -68,6 +82,7 @@ func (e emitter) commonTemplateLine(left, horiz, cross, right string) string {
 	} else {
 		fields = append(fields, right)
 	}
+	fields = append(fields, e.escStop)
 	fields = append(fields, e.eol)
 	return strings.Join(fields, "")
 }
@@ -119,20 +134,20 @@ func (e emitter) BodyDividers() DividerSet {
 func (e emitter) commonRenderedLine(ds DividerSet, cellStrs []WidthString, colAligns []align.Alignment) string {
 	fields := make([]string, 0, len(e.colWidths)*2+1)
 	if ds.Left != "" {
-		fields = append(fields, ds.Left)
+		fields = append(fields, e.escStart+ds.Left+e.escCellStart)
 	}
 	for i := range e.colWidths {
 		if e.colWidths[i] >= 0 {
 			fields = append(fields, cellStrs[i].WithinWidthAligned(e.colWidths[i], colAligns[i]))
 			if ds.Inner != "" {
-				fields = append(fields, ds.Inner)
+				fields = append(fields, e.escStart+ds.Inner+e.escCellStart)
 			}
 		}
 	}
 	if ds.Right != "" && ds.Inner != "" {
-		fields[len(fields)-1] = ds.Right
+		fields[len(fields)-1] = e.escStart + ds.Right + e.escStop
 	} else if ds.Right != "" {
-		fields = append(fields, ds.Right)
+		fields = append(fields, e.escStart+ds.Right+e.escStop)
 	} else if ds.Inner != "" {
 		fields = fields[:len(fields)-1]
 	}

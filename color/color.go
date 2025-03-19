@@ -26,6 +26,7 @@ type Color struct {
 
 const nibbleToHex = "0123456789ABCDEF"
 const ansiCSI = "\x1B["
+const ResetColor = ansiCSI + "m"
 
 func writeUint8Hex2(buf []byte, n uint8) {
 	buf[0] = byte(nibbleToHex[n/16])

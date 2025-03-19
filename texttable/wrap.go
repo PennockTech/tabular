@@ -6,7 +6,14 @@ package texttable // import "go.pennock.tech/tabular/texttable"
 
 import (
 	"go.pennock.tech/tabular"
+	"go.pennock.tech/tabular/color"
 	"go.pennock.tech/tabular/texttable/decoration"
+)
+
+type colorFlags uint8
+
+const (
+	colorBGSolid colorFlags = 1 << iota
 )
 
 // A TextTable wraps a tabular.Table to act as the render control for
@@ -15,7 +22,10 @@ import (
 type TextTable struct {
 	tabular.Table
 
-	decor decoration.Decoration
+	decor   decoration.Decoration
+	fgcolor *color.Color
+	bgcolor *color.Color
+	bgflags colorFlags
 }
 
 // Wrap returns a TextTable rendering object for the given tabular.Table
