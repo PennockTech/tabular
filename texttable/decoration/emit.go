@@ -26,6 +26,8 @@ type emitter struct {
 	escStart     string
 	escStop      string
 	escCellStart string
+	escClearEOL  string
+	noResetEOL   bool
 }
 
 // ForColumnWidths returns an emitter object with methods for getting
@@ -62,6 +64,14 @@ func (e *emitter) SetANSIEscapes(escStart, escStop, escCellStart string) {
 	} else if e.escStart != "" {
 		e.escCellStart = e.escStart
 	}
+	// clr_eol / el
+	// without this, terminals are inconsistent in whether or not to stop the color at newline;
+	// eg, in gnome-terminal, we get color to right margin on all lines except the first.
+	e.escClearEOL = "\x1B[K"
+}
+
+func (e *emitter) SetNoResetEOL(onoff bool) {
+	e.noResetEOL = onoff
 }
 
 func (e emitter) commonTemplateLine(left, horiz, cross, right string) string {
@@ -82,7 +92,14 @@ func (e emitter) commonTemplateLine(left, horiz, cross, right string) string {
 	} else {
 		fields = append(fields, right)
 	}
-	fields = append(fields, e.escStop)
+	if e.noResetEOL {
+		// Without e.escStop here too, and with LineBottom appending e.escStop when e.noResetEOL,
+		// we get perfection in xterm but gnome-terminal carries the background over for one more line, which seems like a bug.
+		// So force a stop at the end of the lines.
+		fields = append(fields, e.escClearEOL+e.escStop)
+	} else {
+		fields = append(fields, e.escStop)
+	}
 	fields = append(fields, e.eol)
 	return strings.Join(fields, "")
 }
@@ -133,6 +150,10 @@ func (e emitter) BodyDividers() DividerSet {
 
 func (e emitter) commonRenderedLine(ds DividerSet, cellStrs []WidthString, colAligns []align.Alignment) string {
 	fields := make([]string, 0, len(e.colWidths)*2+1)
+	eolReset := e.escStop
+	if e.noResetEOL {
+		eolReset = e.escClearEOL + e.escStop
+	}
 	if ds.Left != "" {
 		fields = append(fields, e.escStart+ds.Left+e.escCellStart)
 	}
@@ -145,9 +166,9 @@ func (e emitter) commonRenderedLine(ds DividerSet, cellStrs []WidthString, colAl
 		}
 	}
 	if ds.Right != "" && ds.Inner != "" {
-		fields[len(fields)-1] = e.escStart + ds.Right + e.escStop
+		fields[len(fields)-1] = e.escStart + ds.Right + eolReset
 	} else if ds.Right != "" {
-		fields = append(fields, e.escStart+ds.Right+e.escStop)
+		fields = append(fields, e.escStart+ds.Right+eolReset)
 	} else if ds.Inner != "" {
 		fields = fields[:len(fields)-1]
 	}

@@ -72,15 +72,40 @@ func init() {
 }
 
 func setColorsOrDecorationsFromSections(tt *texttable.TextTable, sections []string) {
+	// These 3 control the implicit targetting of sections, border fg then border bg, and decorations.
+	// Setting the cell colors (text) explicitly requires using the string prefix forms.
 	doneFG, doneBG, doneDecoration := false, false, false
 	for _, section := range sections {
+		section = strings.ToLower(section)
 		var (
 			c                color.Color
 			err              error
 			red, green, blue uint64
 			haveColor        bool
+			colorForce       string
 		)
 		haveColor = false
+
+		if strings.HasPrefix(section, "fg:") {
+			colorForce = "FG"
+			section = section[3:]
+		} else if strings.HasPrefix(section, "bg:") {
+			colorForce = "BG"
+			section = section[3:]
+		} else if strings.HasPrefix(section, "text:") {
+			colorForce = "CELLFG"
+			section = section[5:]
+		} else if strings.HasPrefix(section, "cell:") {
+			colorForce = "CELLFG"
+			section = section[5:]
+		} else if strings.HasPrefix(section, "cellfg:") {
+			colorForce = "CELLFG"
+			section = section[7:]
+		} else if strings.HasPrefix(section, "cellbg:") {
+			colorForce = "CELLBG"
+			section = section[7:]
+		}
+
 		if c, err = color.ByHTMLNamedColor(section); err == nil {
 			haveColor = true
 		} else if m := reColorHex.FindStringSubmatch(section); m != nil {
@@ -97,11 +122,37 @@ func setColorsOrDecorationsFromSections(tt *texttable.TextTable, sections []stri
 			}
 		} else if section == "solid" {
 			tt.SetBGSolid(true)
+		} else if section == "!solid" {
+			tt.SetBGSolid(false)
+		} else if section == "fullwidth" || section == "toeol" {
+			tt.SetColorToEOL(true)
+		} else if section == "!fullwidth" || section == "!toeol" {
+			tt.SetColorToEOL(false)
 		} else if !doneDecoration {
 			tt.SetDecorationNamed(section)
 			doneDecoration = true
 		}
 		if haveColor {
+			switch colorForce {
+			case "FG":
+				tt.SetFGColor(c)
+				doneFG = true
+				continue
+			case "BG":
+				tt.SetBGColor(c)
+				doneBG = true
+				continue
+			case "CELLFG":
+				tt.SetCellFGColor(c)
+				continue
+			case "CELLBG":
+				tt.SetCellBGColor(c)
+				continue
+			case "":
+			default:
+				panic("BUG unexpected colorForce value: " + colorForce)
+			}
+
 			if doneFG && doneBG {
 				continue
 			} else if doneFG {

@@ -85,3 +85,37 @@ func (t *TextTable) SetBGSolid(onoff bool) *TextTable {
 	}
 	return t
 }
+
+// SetColorToEOL causes the table to not reset color at the end of the table lines
+func (t *TextTable) SetColorToEOL(onoff bool) *TextTable {
+	if onoff {
+		t.bgflags |= colorToEOL
+	} else {
+		t.bgflags &= ^colorToEOL
+	}
+	return t
+}
+
+// SetCellFGColor sets the color for the foreground color of cells
+func (t *TextTable) SetCellFGColor(c color.Color) *TextTable {
+	t.cellfgcolor = &c
+	return t
+}
+
+// SetCellBGColor sets the color for the background color of cells
+func (t *TextTable) SetCellBGColor(c color.Color) *TextTable {
+	t.cellbgcolor = &c
+	return t
+}
+
+// RemoveCellFGColor removes the color for the foreground of cells
+func (t *TextTable) RemoveCellFGColor(c color.Color) *TextTable {
+	t.cellfgcolor = nil
+	return t
+}
+
+// RemoveCellBGColor removes the color for the background of cells
+func (t *TextTable) RemoveCellBGColor(c color.Color) *TextTable {
+	t.cellbgcolor = nil
+	return t
+}

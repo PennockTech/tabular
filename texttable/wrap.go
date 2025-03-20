@@ -14,6 +14,7 @@ type colorFlags uint8
 
 const (
 	colorBGSolid colorFlags = 1 << iota
+	colorToEOL
 )
 
 // A TextTable wraps a tabular.Table to act as the render control for
@@ -22,10 +23,12 @@ const (
 type TextTable struct {
 	tabular.Table
 
-	decor   decoration.Decoration
-	fgcolor *color.Color
-	bgcolor *color.Color
-	bgflags colorFlags
+	decor       decoration.Decoration
+	fgcolor     *color.Color
+	bgcolor     *color.Color
+	cellfgcolor *color.Color
+	cellbgcolor *color.Color
+	bgflags     colorFlags
 }
 
 // Wrap returns a TextTable rendering object for the given tabular.Table

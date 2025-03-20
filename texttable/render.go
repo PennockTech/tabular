@@ -131,8 +131,11 @@ func (t *TextTable) RenderTo(w io.Writer) error {
 	colorON := t.colorBegin()
 	colorCELL := t.colorCellBegin()
 	colorOFF := t.colorEnd()
-	if colorON != "" {
+	if colorON != "" || colorCELL != color.ResetColor {
 		emitter.SetANSIEscapes(colorON, colorOFF, colorCELL)
+	}
+	if t.bgflags&colorToEOL != 0 {
+		emitter.SetNoResetEOL(true)
 	}
 
 	if headers != nil {
@@ -220,15 +223,30 @@ func (t *TextTable) colorBegin() string {
 	if t.bgcolor != nil {
 		io.WriteString(b, t.bgcolor.AnsiEscapeBG())
 	}
+	if t.fgcolor == nil && t.bgcolor == nil && (t.cellfgcolor != nil || t.cellbgcolor != nil) {
+		io.WriteString(b, color.ResetColor)
+	}
 	return b.String()
 }
 
 func (t *TextTable) colorCellBegin() string {
-	if t.bgcolor == nil {
+	if t.bgcolor == nil && t.cellfgcolor == nil && t.cellbgcolor == nil {
 		return color.ResetColor
 	}
-	if t.bgflags&colorBGSolid != 0 {
-		return color.ResetColor + t.bgcolor.AnsiEscapeBG()
+	if t.cellbgcolor == nil && t.bgflags&colorBGSolid != 0 {
+		if t.cellfgcolor == nil {
+			return color.ResetColor + t.bgcolor.AnsiEscapeBG()
+		}
+		return t.cellfgcolor.AnsiEscapeFG() + t.bgcolor.AnsiEscapeBG()
+	}
+	if t.cellbgcolor != nil {
+		if t.cellfgcolor == nil {
+			return color.ResetColor + t.cellbgcolor.AnsiEscapeBG()
+		}
+		return t.cellfgcolor.AnsiEscapeFG() + t.cellbgcolor.AnsiEscapeBG()
+	}
+	if t.cellfgcolor != nil {
+		return color.ResetColor + t.cellfgcolor.AnsiEscapeFG()
 	}
 	return color.ResetColor
 }
