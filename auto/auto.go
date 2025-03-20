@@ -6,7 +6,9 @@ package auto // import "go.pennock.tech/tabular/auto"
 
 import (
 	"io"
+	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 
 	"go.pennock.tech/tabular"
@@ -63,10 +65,43 @@ func Wrap(t tabular.Table, style string) RenderTable {
 	return rt
 }
 
+var reColorHex *regexp.Regexp
+
+func init() {
+	reColorHex = regexp.MustCompile(`^#?([0-9A-Fa-f]{2})([0-9A-Fa-f]{2})([0-9A-Fa-f]{2})\z`)
+}
+
 func setColorsOrDecorationsFromSections(tt *texttable.TextTable, sections []string) {
 	doneFG, doneBG, doneDecoration := false, false, false
 	for _, section := range sections {
-		if c, err := color.ByHTMLNamedColor(section); err == nil {
+		var (
+			c                color.Color
+			err              error
+			red, green, blue uint64
+			haveColor        bool
+		)
+		haveColor = false
+		if c, err = color.ByHTMLNamedColor(section); err == nil {
+			haveColor = true
+		} else if m := reColorHex.FindStringSubmatch(section); m != nil {
+			red, err = strconv.ParseUint(m[1], 16, 8)
+			if err == nil {
+				green, err = strconv.ParseUint(m[2], 16, 8)
+			}
+			if err == nil {
+				blue, err = strconv.ParseUint(m[3], 16, 8)
+			}
+			if err == nil {
+				c = color.RGB24(uint8(red), uint8(green), uint8(blue))
+				haveColor = true
+			}
+		} else if section == "solid" {
+			tt.SetBGSolid(true)
+		} else if !doneDecoration {
+			tt.SetDecorationNamed(section)
+			doneDecoration = true
+		}
+		if haveColor {
 			if doneFG && doneBG {
 				continue
 			} else if doneFG {
@@ -76,11 +111,6 @@ func setColorsOrDecorationsFromSections(tt *texttable.TextTable, sections []stri
 				tt.SetFGColor(c)
 				doneFG = true
 			}
-		} else if section == "solid" {
-			tt.SetBGSolid(true)
-		} else if !doneDecoration {
-			tt.SetDecorationNamed(section)
-			doneDecoration = true
 		}
 	}
 }
